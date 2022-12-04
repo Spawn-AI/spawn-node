@@ -26,6 +26,24 @@ export type WorkerFilter = {
     cluster?: number;
 }
 
+export type StableDiffusionConfig = {
+  steps: number;
+  skip_steps: number;
+  batch_size: 1 | 2 | 4 | 8 | 16;
+  sampler: "plms" | "ddim" | "k_lms" | "k_euler" | "k_euler_a";
+  guidance_scale: number;
+  width: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
+  height: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
+  prompt: string;
+  negative_prompt: string;
+  init_image?: string;
+  mask?: string;
+  image_format: "png" | "jpeg" | "avif" | "webp";
+  translate_prompt: boolean;
+  nsfw_filter: boolean;
+  seed?: number;
+};
+
 export class SelasClient {
   supabase: SupabaseClient;
   app_id: string;
@@ -56,7 +74,7 @@ export class SelasClient {
   };
 
   echo = async () => {
-    return await this.rpc("echo", { say: "Hi" });
+    return await this.rpc("app_owner_echo", {});
     };
 
     getAppSuperUser = async () => {
@@ -148,27 +166,12 @@ export class SelasClient {
     service_id: string;
     job_config: string;
   }) => {
-      let v_app_super_user = await this.getAppSuperUser();
-      if (!v_app_super_user.error) {
-          let v_app_user_token = await this.getAppUserToken({ app_user_id: v_app_super_user.data });
-          if (!v_app_super_user.error) {
-              const { data, error } = await this.supabase.rpc("post_job", {
-                  p_app_id: this.app_id,
-                  p_app_key: this.key,
-
-                  p_app_user_id: v_app_super_user.data,
-                  p_app_user_token: v_app_user_token.data,
-
-                  p_service_id: args.service_id,
-                  p_job_config: args.job_config,
-                  p_worker_filter: this.worker_filter,
-              });
-              return { data, error };
-          }
-          return v_app_user_token;
-      }
-      return v_app_super_user;
-      
+    const { data, error } = await this.rpc("app_owner_post_job_admin", {
+        p_service_id: args.service_id,
+        p_job_config: args.job_config,
+        p_worker_filter: this.worker_filter,
+    });
+    return { data, error };
   };
 
   /**

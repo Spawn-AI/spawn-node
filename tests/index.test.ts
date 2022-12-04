@@ -1,51 +1,78 @@
-import { createSelasClient } from "../src/index";
+import { createSelasClient, SelasClient, StableDiffusionConfig} from "../src/index";
 
 import * as dotenv from 'dotenv'
+
 dotenv.config()
 
-describe("testing index file", () => {
+describe("testing selas-node", () => {
 
+    let selas: SelasClient;
+    let user: string;
 
-    test("creation of user ", async () => {  
-
-        expect(process.env.TEST_APP_KEY).toBeDefined();
-
-        const selas = await createSelasClient({
+    test("creation of client", async () => {
+        selas = await createSelasClient({
             app_id: process.env.TEST_APP_ID!,
             key: process.env.TEST_APP_KEY!,
             secret: process.env.TEST_APP_SECRET!,
         });
 
-        await selas.echo();
+        expect(selas).toBeDefined();
 
-        //const result_user = await selas.createAppUser();
+        const { data, error } = await selas.echo();
+        expect(error).toBeNull();
+        expect(data).toEqual("echo");
 
-        //const v_app_user_id = String(result_user.data);
-
-        //const result_token = await selas.createToken({ app_user_id: v_app_user_id });
-
-        //const v_app_user_token = String(result_token.data);
-
-        //const credit_result_1 = await selas.getAppUserCredits({ app_user_id: v_app_user_id });
-
-        //expect(credit_result_1.data).toBe(0);
-
-        //await selas.addCredit({ app_user_id: v_app_user_id, amount: 10 });
-
-        //const credit_result_2 = await selas.getAppUserCredits({ app_user_id: v_app_user_id });
-
-        //expect(credit_result_2.data).toBe(10);
-
-        // console.log(await selas.postJob({
-        //     service_id: '04cdf9c4-5338-4e32-9e63-e15b2150d7f9',
-        //     job_config: '{"steps":28,"width":512,"eight":512,"prompt":"cute cat","sampler":"k_lms","translate":false,"batch_size":1,"skip_steps":0,"nsfw_filter":false,"image_format":"png","guidance_scale":7.5}',
-        // }));
-
-
-
-        //const result_deactivation = await selas.deactivateAppUser({ app_user_id: v_app_user_id });
-
-        //expect(result_deactivation.data).toBe(true);
 
     });
+
+    test("creation of users", async () => {
+        const { data, error } = await selas.createAppUser();
+        expect(error).toBeNull();
+        if (!error){
+            user = data;
+            expect(user).toBeDefined();
+        }
+    });
+
+    test("token's life cycle", async () => {
+        let new_token = await selas.createToken({ app_user_id: user });
+        expect(new_token.error).toBeNull();
+        if (!new_token.error){
+            let token = await selas.getAppUserToken({ app_user_id: user })
+            if (!token.error){
+                expect(token.data).toEqual(new_token.data);
+            }
+        }
+        let deleted = await selas.deactivateAppUser({ app_user_id: user });
+        expect(deleted.error).toBeNull();
+        if (!deleted.error){
+            expect(deleted.data).toEqual(true);
+        }
+    });
+
+    test("creation of job", async () => {
+        const config: StableDiffusionConfig = {
+            steps: 5,
+            skip_steps: 0,
+            batch_size: 1,
+            sampler: "plms",
+            guidance_scale: 0.5,
+            width: 384,
+            height: 384,
+            prompt: "banana in the kitchen",
+            negative_prompt: "ulgy",
+            image_format: "png",
+            translate_prompt: false,
+            nsfw_filter: true
+        };
+        const { data, error } = await selas.postJob({
+            service_id: '04cdf9c4-5338-4e32-9e63-e15b2150d7f9',
+            job_config: JSON.stringify(config)
+        });
+        expect(error).toBeNull();
+        if (!error){
+            expect(data).toBeDefined();
+        }
+    });
+
 });
