@@ -1,15 +1,22 @@
 import { createSelasClient } from "../src/index";
 
+import * as dotenv from 'dotenv'
+dotenv.config()
+
 describe("testing index file", () => {
 
 
-    test("creation of user ", async () => {
+    test("creation of user ", async () => {  
+
+        expect(process.env.TEST_APP_KEY).toBeDefined();
+
         const selas = await createSelasClient({
             app_id: process.env.TEST_APP_ID!,
             key: process.env.TEST_APP_KEY!,
             secret: process.env.TEST_APP_SECRET!,
-
         });
+
+        await selas.echo();
 
         //const result_user = await selas.createAppUser();
 
@@ -29,10 +36,10 @@ describe("testing index file", () => {
 
         //expect(credit_result_2.data).toBe(10);
 
-        console.log(await selas.postJob({
-            service_id: '04cdf9c4-5338-4e32-9e63-e15b2150d7f9',
-            job_config: '{"steps":28,"width":512,"eight":512,"prompt":"cute cat","sampler":"k_lms","translate":false,"batch_size":1,"skip_steps":0,"nsfw_filter":false,"image_format":"png","guidance_scale":7.5}',
-        }));
+        // console.log(await selas.postJob({
+        //     service_id: '04cdf9c4-5338-4e32-9e63-e15b2150d7f9',
+        //     job_config: '{"steps":28,"width":512,"eight":512,"prompt":"cute cat","sampler":"k_lms","translate":false,"batch_size":1,"skip_steps":0,"nsfw_filter":false,"image_format":"png","guidance_scale":7.5}',
+        // }));
 
 
 

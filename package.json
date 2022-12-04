@@ -40,7 +40,7 @@
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && pnpm publish --no-git-checks",
     "start": "node --loader=ts-node/esm src/index.ts",
-    "test": "jest",
+    "test": "jest --setupFiles dotenv/config",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
@@ -72,6 +72,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.1.0",
+    "dotenv": "^16.0.3",
     "jsonwebtoken": "^8.5.1"
   },
   "directories": {
