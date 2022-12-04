@@ -1,0 +1,96 @@
+{
+  "name": "@selas/selas-node",
+  "version": "0.0.1",
+  "description": "Client for the Selas API using NodeJS",
+  "packageManager": "pnpm@7.13.2",
+  "engines": {
+    "node": ">=16"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "author": "Benjamin Trom",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/*",
+        "./dist/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && unbuild",
+    "dev": "unbuild --stub",
+    "lint": "eslint . --ext=.ts",
+    "format": "prettier --write .",
+    "prepublishOnly": "nr build",
+    "release": "bumpp --commit --push --tag && pnpm publish --no-git-checks",
+    "start": "node --loader=ts-node/esm src/index.ts",
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.1.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.3.1",
+    "@types/jest": "^29.2.3",
+    "@types/jsonwebtoken": "^8.5.9",
+    "@types/node": "^18.7.14",
+    "bumpp": "^8.2.1",
+    "jest": "^29.3.1",
+    "pnpm": "^7.9.5",
+    "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^29.0.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.2",
+    "unbuild": "^0.8.10"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "openapi-types",
+        "vite",
+        "@babel/core"
+      ]
+    }
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.1.0",
+    "jsonwebtoken": "^8.5.1"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SelasStudio/selas-js.git"
+  },
+  "keywords": [
+    "API",
+    "Client",
+    "for",
+    "Selas",
+    "API",
+    "(https://selas.ai)"
+  ],
+  "bugs": {
+    "url": "https://github.com/SelasStudio/selas-js/issues"
+  },
+  "homepage": "https://github.com/SelasStudio/selas-js#readme"
+}
