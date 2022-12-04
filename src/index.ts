@@ -19,14 +19,14 @@ export type Token = {
 };
 
 export type WorkerFilter = {
-    id?: string;
-    name?: string;
-    branch?: string;
-    is_dirty?: boolean;
-    cluster?: number;
-}
+  id?: string;
+  name?: string;
+  branch?: string;
+  is_dirty?: boolean;
+  cluster?: number;
+};
 
-export type StableDiffusionConfig = {
+interface StableDiffusionConfig {
   steps: number;
   skip_steps: number;
   batch_size: 1 | 2 | 4 | 8 | 16;
@@ -42,8 +42,17 @@ export type StableDiffusionConfig = {
   translate_prompt: boolean;
   nsfw_filter: boolean;
   seed?: number;
-};
+}
 
+/**
+ * SelasClient is a client for the Selas API.
+ *
+ * @param supabase - Supabase client
+ * @param app_id - The application ID.
+ * @param key - The application key.
+ * @param secret - The application secret.
+ * @param worker_filter - Filter with regex to select workers.
+ */
 export class SelasClient {
   supabase: SupabaseClient;
   app_id: string;
@@ -51,13 +60,13 @@ export class SelasClient {
   secret: string;
   worker_filter: WorkerFilter;
 
-    constructor(supabase: SupabaseClient, app_id: string, key: string, secret: string, worker_filter?: WorkerFilter) {
-        this.supabase = supabase;
-        this.app_id = app_id;
-        this.key = key;
-        this.secret = secret;
-        this.worker_filter = worker_filter || { branch: "prod" };
-    }
+  constructor(supabase: SupabaseClient, app_id: string, key: string, secret: string, worker_filter?: WorkerFilter) {
+    this.supabase = supabase;
+    this.app_id = app_id;
+    this.key = key;
+    this.secret = secret;
+    this.worker_filter = worker_filter || { branch: "prod" };
+  }
 
   /**
    * Call a rpc function on the selas server with app_id, key and secret.
@@ -75,25 +84,25 @@ export class SelasClient {
 
   echo = async () => {
     return await this.rpc("app_owner_echo", {});
-    };
+  };
 
-    getAppSuperUser = async () => {
-        const { data, error } = await this.rpc("app_owner_get_super_user", {});
-        if (!error) {
-            return { data: String(data), error };
-        } else {
-            return { data, error };
-        }
-    };
+  getAppSuperUser = async () => {
+    const { data, error } = await this.rpc("app_owner_get_super_user", {});
+    if (!error) {
+      return { data: String(data), error };
+    } else {
+      return { data, error };
+    }
+  };
 
-    getAppUserToken = async (args: { app_user_id: string }) => {
-        const { data, error } = await this.rpc("app_owner_get_user_token_value", { p_app_user_id: args.app_user_id });
-        if (!error) {
-            return { data: String(data), error };
-        } else {
-            return { data, error };
-        }
-    };
+  getAppUserToken = async (args: { app_user_id: string }) => {
+    const { data, error } = await this.rpc("app_owner_get_user_token_value", { p_app_user_id: args.app_user_id });
+    if (!error) {
+      return { data: String(data), error };
+    } else {
+      return { data, error };
+    }
+  };
 
   /**
    * Add customer to the database. After creation, the customer will have 0 credits ;
@@ -162,14 +171,11 @@ export class SelasClient {
     return deleted;
   };
 
-  postJob = async (args: {
-    service_id: string;
-    job_config: string;
-  }) => {
+  postJob = async (args: { service_id: string; job_config: string }) => {
     const { data, error } = await this.rpc("app_owner_post_job_admin", {
-        p_service_id: args.service_id,
-        p_job_config: args.job_config,
-        p_worker_filter: this.worker_filter,
+      p_service_id: args.service_id,
+      p_job_config: args.job_config,
+      p_worker_filter: this.worker_filter,
     });
     return { data, error };
   };
@@ -221,7 +227,7 @@ export class SelasClient {
    *
    */
   async createToken(args: { app_user_id: string }) {
-    var { data, error } = await this.rpc("app_owner_create_user_token", { p_app_user_id: args.app_user_id });
+    const { data, error } = await this.rpc("app_owner_create_user_token", { p_app_user_id: args.app_user_id });
 
     if (error) {
       return { data, error };
@@ -229,21 +235,53 @@ export class SelasClient {
       return { data: String(data), error };
     }
   }
+
+  /**
+   * Run a StableDiffusion job on Selas API. The job will be run on the first available worker.
+   *
+   * @param args.prompt - the description of the image to be generated
+   * @param args.negative_prompt - description of the image to be generated, but with negative words like "ugly", "blurry" or "low quality"
+   * @param args.width - the width of the generated image
+   * @param args.height - the height of the generated image
+   * @param args.steps - the number of steps of the StableDiffusion algorithm. The higher the number, the more detailed the image will be. Generally, 30 steps is enough, but you can try more if you want.
+   * @param args.batch_size - the number of images to be generated at each step.
+   * @param args.guidance_scale - the weight of the guidance image in the loss function. Typical values are between 5. and 15. The higher the number, the more the image will look like the prompt. If you go too high, the image will look like the prompt but will be low quality.
+   * @param args.init_image - the url of an initial image to be used by the algorithm. If not provided, random noise will be used. You can start from an existing image and make StableDiffusion refine it. You can specify the skip_steps to choose how much of the image will be refined (0 is like a random initialization, 1. is like a copy of the image).
+   * @param args.mask - the url of a mask image. The mask image must be a black and white image where white pixels are the pixels that will be modified by the algorithm. Black pixels will be kept as they are. If not provided, the whole image will be modified.
+   * @param args.skip_steps - the number of steps to skip at the beginning of the algorithm. If you provide an init_image, you can choose how much of the image will be refined. 0 is like a random initialization, 1. is like a copy of the image.
+   * @param args.seed - the seed of the random number generator. Using twice the same we generate the same image. It can be useful to see the effect of parameters on the image generated. If not provided, a random seed will be used.
+   * @param args.image_format - the format of the generated image. It can be "png" or "jpeg".
+   * @param args.nsfw_filter - if true, the image will be filtered to remove NSFW content. It can be useful if you want to generate images for a public website.
+   * @param args.translate_prompt - if true, the prompt will be translated to English before being used by the algorithm. It can be useful if you want to generate images in a language that is not English.
+   **/
+  runStableDiffusion = async (args: StableDiffusionConfig) => {
+    const response = await this.postJob({
+      service_id: "04cdf9c4-5338-4e32-9e63-e15b2150d7f9",
+      job_config: JSON.stringify(args),
+    });
+
+    if (response.error) {
+      return { data: null, error: response.error };
+    } else {
+      return { data: response.data, error: null };
+    }
+  };
 }
+
 
 /**
  * Create a selas client. The client can be used to access the API using the credentials created
- * on https://selas.ai. The client can be used to manage users, tokens and credits. Be careful, the client
+ * on https://selas.ai. The client can be used to manage users, tokens and credits of an app. Be careful, the client
  * is not secure and should not be used in a browser.
  *
- * @param credentials - the credentials of the client (email and password). You can create them on https://selas.ai
+ * @param credentials - the credentials of the app You can create them on https://selas.ai
  *
  * @returns a SelasClient object.
  *
  * @example
- * Create a token for a customer.
+ * Create a app owner client.
  * ```ts
- * const selas = await createCLient({email: "leopold@selas.studio", password: "password"});
+ * const selas = await createCLient({app_id: "9a8b7c6d5e4f3g2h1i0j", app_key: "e9t#ah9-t", app_secret: "a9t#ah9-t"});
  * ```
  *
  */
