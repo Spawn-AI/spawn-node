@@ -19,10 +19,11 @@ const generateImage = async () => {
     width: 512,
     height: 512,
     prompt: "banana in the kitchen",
-    negative_prompt: "ugly",
+    negative_prompt: "(weird: 0.15)",
     image_format: "jpeg",
     translate_prompt: false,
     nsfw_filter: false,
+    seed: 1
   };
 
   const response = await client.runStableDiffusion(config);
@@ -30,7 +31,7 @@ const generateImage = async () => {
   if (response.data) {
     client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
   } else {
-    console.log(response.error);
+    console.log("helol");
   }
 };
 
