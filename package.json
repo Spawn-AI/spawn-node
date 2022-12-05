@@ -44,7 +44,8 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@supabase/supabase-js": "^2.1.0"
+    "@supabase/supabase-js": "^2.1.0",
+    "pusher-client": "1.1.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.3.1",
@@ -73,7 +74,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.1.0",
     "dotenv": "^16.0.3",
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "pusher-client": "^1.1.0"
   },
   "directories": {
     "test": "test"

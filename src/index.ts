@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+var Pusher = require('pusher-client');
 
 export type Customer = {
   id?: string;
@@ -26,7 +27,7 @@ export type WorkerFilter = {
   cluster?: number;
 };
 
-interface StableDiffusionConfig {
+export type StableDiffusionConfig = {
   steps: number;
   skip_steps: number;
   batch_size: 1 | 2 | 4 | 8 | 16;
@@ -42,7 +43,7 @@ interface StableDiffusionConfig {
   translate_prompt: boolean;
   nsfw_filter: boolean;
   seed?: number;
-}
+};
 
 /**
  * SelasClient is a client for the Selas API.
@@ -180,6 +181,15 @@ export class SelasClient {
     return { data, error };
   };
 
+  subscribeToJob = (args: { job_id: string; callback: (result: object) => void }) => {
+    const client = new Pusher("ed00ed3037c02a5fd912", {
+      cluster: "eu",
+    });
+
+    const channel = client.subscribe(`job-${args.job_id}`);
+    channel.bind("result", args.callback);
+  };
+
   /**
    * Change the current credits of a customer. The customer must have been created with the createCustomer method. The credits can be negative,
    * in which case the custome will lose credits and the remaining credits will be
@@ -268,13 +278,12 @@ export class SelasClient {
   };
 }
 
-
 /**
  * Create a selas client. The client can be used to access the API using the credentials created
  * on https://selas.ai. The client can be used to manage users, tokens and credits of an app. Be careful, the client
  * is not secure and should not be used in a browser.
  *
- * @param credentials - the credentials of the app You can create them on https://selas.ai
+ * @param credentials - the credentials of the app. You can create them on https://selas.ai
  *
  * @returns a SelasClient object.
  *
@@ -285,12 +294,15 @@ export class SelasClient {
  * ```
  *
  */
-export const createSelasClient = async (credentials: { app_id: string; key: string; secret: string }) => {
+export const createSelasClient = async (
+  credentials: { app_id: string; key: string; secret: string },
+  worker_filter?: WorkerFilter
+) => {
   const SUPABASE_URL = "https://lgwrsefyncubvpholtmh.supabase.co";
   const SUPABASE_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxnd3JzZWZ5bmN1YnZwaG9sdG1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Njk0MDE0MzYsImV4cCI6MTk4NDk3NzQzNn0.o-QO3JKyJ5E-XzWRPC9WdWHY8WjzEFRRnDRSflLzHsc";
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
 
-  return new SelasClient(supabase, credentials.app_id, credentials.key, credentials.secret);
+  return new SelasClient(supabase, credentials.app_id, credentials.key, credentials.secret, worker_filter);
 };
