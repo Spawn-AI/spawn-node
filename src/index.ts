@@ -92,7 +92,7 @@ export class SelasClient {
    * @param secret 
    * @param worker_filter 
    * @example
-   *  selas = await createSelasClient(
+   *  client = await createSelasClient(
    *  {
    *    app_id: process.env.TEST_APP_ID!,
    *    key: process.env.TEST_APP_KEY!,
@@ -110,7 +110,7 @@ export class SelasClient {
   }
 
   /**
-   * rpc is a wrapper around the supabase rpc function.
+   * rpc is a wrapper around the supabase rpc function usable by the SelasClient.
    * @param fn - The name of the function to call.
    * @param params - The parameters to pass to the function.
    * @returns the result of the rpc call.
@@ -241,9 +241,11 @@ export class SelasClient {
   };
 
   /**
-   * Get the status of a job.
+   * Wait for the  the result of a job and returns it.
    * @param job_id - the id of the job.
-   * @callback - a function that will be called when the status of the job changes.
+   * @callback - the function that will be used to process the result of the job.
+   * @example
+   *  client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
    */
   subscribeToJob = async (args: { job_id: string; callback: (result: object) => void }) => {
     const client = new Pusher("ed00ed3037c02a5fd912", {
@@ -303,7 +305,7 @@ export class SelasClient {
  * @example
  * Create a app owner client.
  * ```ts
- * const selas = await createCLient({app_id: "9a8b7c6d5e4f3g2h1i0j", app_key: "e9t#ah9-t", app_secret: "a9t#ah9-t"});
+ * const client = await createCLient({app_id: "9a8b7c6d5e4f3g2h1i0j", app_key: "e9t#ah9-t", app_secret: "a9t#ah9-t"});
  * ```
  *
  */

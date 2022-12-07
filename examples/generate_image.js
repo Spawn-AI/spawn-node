@@ -18,7 +18,7 @@ const generateImage = async () => {
     guidance_scale: 10,
     width: 512,
     height: 512,
-    prompt: "a cute calico cat artstation",
+    prompt: "hand gel on someone",
     negative_prompt: "(weird: 0.15) (blur: 0.15) ugly vintage text (gray background: 0.15) (dog: 0.6)",
     image_format: "jpeg",
     translate_prompt: false,
