@@ -1,11 +1,12 @@
 const selas = require("../dist/index.cjs");
+require('dotenv').config()
 
 const generateImage = async () => {
   const client = await selas.createSelasClient(
     {
-      app_id: "2cef0cb9-35da-4d0b-b3b9-ed51caa67bab",
-      key: "Xn*ga&SZ&+wqcfsd",
-      secret: "*ekEFYPke()@-Ljm",
+      app_id: process.env.TEST_APP_ID,
+      key: process.env.TEST_APP_KEY,
+      secret: process.env.TEST_APP_SECRET,
     },
     { branch: "main" }
   );
