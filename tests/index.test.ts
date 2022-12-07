@@ -7,6 +7,7 @@ dotenv.config();
 describe("testing selas-node", () => {
   let selas: SelasClient;
   let user: string;
+  let job: string;
 
   test("creation of client", async () => {
     selas = await createSelasClient(
@@ -20,9 +21,9 @@ describe("testing selas-node", () => {
 
     expect(selas).toBeDefined();
 
-    const { data, error } = await selas.echo();
+    const { data, error } = await selas.echo({ message: "Hello"});
     expect(error).toBeNull();
-    expect(data).toEqual("echo");
+    expect(data).toEqual("Hello");
   });
 
   test("creation of users", async () => {
@@ -65,13 +66,22 @@ describe("testing selas-node", () => {
       translate_prompt: false,
       nsfw_filter: false,
     };
+
+    console.log(JSON.stringify(config));
+    
     const { data, error } = await selas.postJob({
       service_id: "04cdf9c4-5338-4e32-9e63-e15b2150d7f9",
       job_config: JSON.stringify(config),
     });
     expect(error).toBeNull();
     if (!error) {
-      expect(data).toBeDefined();
+      job = String(data);
+      expect(job).toBeDefined();
     }
   });
+
+  test("Subscription to a job", async () => {
+    
+  });
+
 });

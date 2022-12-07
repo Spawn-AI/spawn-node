@@ -1,24 +1,14 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 var Pusher = require('pusher-client');
 
-export type Customer = {
-  id?: string;
-  external_id: string;
-  user_id: string;
-  credits: number;
-};
-
-export type Token = {
-  id?: string;
-  key: string;
-  created_at?: string;
-  user_id: string;
-  ttl: number;
-  quota: number;
-  customer_id: string;
-  description?: string;
-};
-
+/**
+ * WorkerFilter is a filter to select workers.
+ * @param id - ID of the worker (optional).
+ * @param name - Name of the worker (optional).
+ * @param branch - Branch of the worker (optional).
+ * @param is_dirty - Whether the worker is dirty (optional).
+ * @param cluster - Cluster of the worker (optional).
+ */
 export type WorkerFilter = {
   id?: string;
   name?: string;
@@ -27,6 +17,39 @@ export type WorkerFilter = {
   cluster?: number;
 };
 
+/**
+ * StableDiffusionConfig is the configuration for the stable diffusion job.
+ * @param steps - Number of steps to run the job for.
+ * @param skip_steps - Number of steps to skip before starting the job.
+ * @param batch_size - Batch size to use for the job.
+ * @param sampler - Sampler to use for the job.
+ * @param guidance_scale - Guidance scale to use for the job.
+ * @param width - Width of the output image.
+ * @param height - Height of the output image.
+ * @param prompt - Prompt to use for the job.
+ * @param negative_prompt - Negative prompt to use for the job.
+ * @param init_image - Initial image to use for the job (optional).
+ * @param mask - Mask to use for the job (optional).
+ * @param image_format - Image format to use for the job.
+ * @param translate_prompt - Whether to translate the prompt.
+ * @param nsfw_filter - Whether to filter nsfw images.
+ * @param seed - Seed to use for the job (optional).
+ * @example - 
+ *    const config: StableDiffusionConfig = {
+ *    steps: 28,
+ *    skip_steps: 0,
+ *    batch_size: 1,
+ *    sampler: "k_euler",
+ *    guidance_scale: 10,
+ *    width: 512,
+ *    height: 512,
+ *    prompt: "banana in the kitchen",
+ *    negative_prompt: "ugly",
+ *    image_format: "jpeg",
+ *    translate_prompt: false,
+ *    nsfw_filter: false,
+ *  };
+ */
 export type StableDiffusionConfig = {
   steps: number;
   skip_steps: number;
@@ -61,6 +84,23 @@ export class SelasClient {
   secret: string;
   worker_filter: WorkerFilter;
 
+  /**
+   * constructor creates a new SelasClient.
+   * @param supabase 
+   * @param app_id 
+   * @param key 
+   * @param secret 
+   * @param worker_filter 
+   * @example
+   *  selas = await createSelasClient(
+   *  {
+   *    app_id: process.env.TEST_APP_ID!,
+   *    key: process.env.TEST_APP_KEY!,
+   *    secret: process.env.TEST_APP_SECRET!,
+   *  },
+   *  { branch: "main" }
+   *);
+   */
   constructor(supabase: SupabaseClient, app_id: string, key: string, secret: string, worker_filter?: WorkerFilter) {
     this.supabase = supabase;
     this.app_id = app_id;
@@ -70,23 +110,33 @@ export class SelasClient {
   }
 
   /**
-   * Call a rpc function on the selas server with app_id, key and secret.
-   *
-   * @param fn
-   * @param params
-   * @returns data from the rpc function or an error.
+   * rpc is a wrapper around the supabase rpc function.
+   * @param fn - The name of the function to call.
+   * @param params - The parameters to pass to the function.
+   * @returns the result of the rpc call.
+   * @example
+   * const { data, error } = await this.rpc("app_owner_echo", {message_app_owner: "hello"});
    */
-  rpc = async (fn: string, params: any) => {
+  private rpc = async (fn: string, params: any) => {
     const paramsWithSecret = { ...params, p_secret: this.secret, p_app_id: this.app_id, p_key: this.key };
     const { data, error } = await this.supabase.rpc(fn, paramsWithSecret);
 
     return { data, error };
   };
 
-  echo = async () => {
-    return await this.rpc("app_owner_echo", {});
+  /**
+   * Send a message to the selas server and wait for the same message to be received.
+   * @param message - The message to send.
+   * @returns a text message which is the same as the input message.
+   */
+  echo = async (args: {message: string}) => {
+    return await this.rpc("app_owner_echo", {message_app_owner: args.message});
   };
 
+  /**
+   * Get the super user of the app. This super user always has an infinite amount of credits and a token.  
+   * @returns the id of the super user.
+   */
   getAppSuperUser = async () => {
     const { data, error } = await this.rpc("app_owner_get_super_user", {});
     if (!error) {
@@ -96,30 +146,9 @@ export class SelasClient {
     }
   };
 
-  getAppUserToken = async (args: { app_user_id: string }) => {
-    const { data, error } = await this.rpc("app_owner_get_user_token_value", { p_app_user_id: args.app_user_id });
-    if (!error) {
-      return { data: String(data), error };
-    } else {
-      return { data, error };
-    }
-  };
-
   /**
-   * Add customer to the database. After creation, the customer will have 0 credits ;
-   *  credits can be added with the addCredits method. The customer will be able to
-   * use the API with the token created with the createToken method.
-   *
-   * @param id - the id of the customer you want to retrieve
-   * @returns the customer object {id: string, credits: number} or an error message
-   *
-   * @example
-   * Start by creating a customer called "Leopold" then add 10 credits to him and create a token that you can send to him.
-   * ```ts
-   * const {data: customer} = await selas.createCustomer("leopold");
-   * const {data: credits} = await selas.changeCredits("leopold", 10);
-   * const {data: token} = await selas.createToken("leopold");
-   * ```
+   * Create a new user for the app. This user will have 0 credits. This user will not be able to post jobs without a token.
+   * @returns the id of the new user.
    */
   createAppUser = async () => {
     const { data, error } = await this.rpc("app_owner_create_user", {});
@@ -131,18 +160,51 @@ export class SelasClient {
   };
 
   /**
-   * Get information about a customer. The customer must have been created with the createCustomer method.
-   *
-   * @param id - the id of the customer you want to check
-   * @returns the current number of credits of the customer or an error message
-   *
-   * @example
-   * You can check the number of credits of a customer by calling the getCustomer method.
-   * ```ts
-   * const {data: credits} = await selas.getCustomerCredits("leopold");
-   * console.log(`Leopold has ${credits} credits left.`); // Leopold had 25 credits left.
-   * ```
-   *
+   * Create a token for a user of the app. This token allows the user to post jobs. The token can be deleted with the deactivateAppUser method.
+   * @param app_user_id - the id of the user.
+   * @returns a text that contains the token of the user.
+   */
+  createToken = async (args: { app_user_id: string }) => {
+    const { data, error } = await this.rpc("app_owner_create_user_token", { p_app_user_id: args.app_user_id });
+    if (error) {
+      return { data, error };
+    } else {
+      return { data: String(data), error };
+    }
+  }
+
+  /**
+   * Get the token of a user of the app. This token allows the user to post jobs. The token can be deleted with the deactivateAppUser method.
+   * @param app_user_id - the id of a user.
+   * @returns a text that contains the token of the user.
+  */
+  getAppUserToken = async (args: { app_user_id: string }) => {
+    const { data, error } = await this.rpc("app_owner_get_user_token_value", { p_app_user_id: args.app_user_id });
+    if (!error) {
+      return { data: String(data), error };
+    } else {
+      return { data, error };
+    }
+  };
+
+  /**
+   * Allows the app owner to add credits to a user of the app.
+   * @param app_user_id - the id of a user.
+   * @param amount - the amount of credits to add.
+   * @returns the new amount of credits of the user.
+   */
+  addCredit = async (args: { app_user_id: string; amount: number }) => {
+      const { data, error } = await this.rpc("app_owner_add_user_credits", {
+        p_amount: args.amount,
+        p_app_user_id: args.app_user_id,
+      });
+      return { data, error };
+    };
+
+  /**
+   * Allows the app owner to get the credits of a user of the app.
+   * @param app_user_id - the id of a user.
+   * @returns the amount of credits of the user.
    */
   getAppUserCredits = async (args: { app_user_id: string }) => {
     const { data, error } = await this.rpc("app_owner_get_user_credits", { p_app_user_id: args.app_user_id });
@@ -150,18 +212,9 @@ export class SelasClient {
   };
 
   /**
-   * Delete a customer from Selas API. The remaining credits will be recredited back to your account.
-   *
-   * @param id - the id of the customer you want to delete
-   * @returns the remaining number of credits if successful or an error message
-   *
-   * @example
-   * You can check the number of credits of a customer by calling the getCustomer method.
-   * ```ts
-   * const {data: credits} = await selas.deleteCustomer("leopold");
-   * console.log(`Leopold had ${credits} credits left before being deleted.`);  // Leopold had 25 credits left before being deleted.
-   * ```
-   *
+   * delete the token of a user of the app. A new token can be created with the createToken method.
+   * @param app_user_id - the id of a user.
+   * @returns true if the token was deleted; false otherwise.
    */
   deactivateAppUser = async (args: { app_user_id: string }) => {
     var token = await this.rpc("app_owner_get_token", { p_app_user_id: args.app_user_id });
@@ -172,6 +225,12 @@ export class SelasClient {
     return deleted;
   };
 
+  /**
+   * Create a new job. This job will be executed by the workers of the app.
+   * @param service_id - the id of the service that will be executed.
+   * @param job_config - the configuration of the job.
+   * @returns the id of the job.
+   */
   postJob = async (args: { service_id: string; job_config: string }) => {
     const { data, error } = await this.rpc("app_owner_post_job_admin", {
       p_service_id: args.service_id,
@@ -181,7 +240,12 @@ export class SelasClient {
     return { data, error };
   };
 
-  subscribeToJob = (args: { job_id: string; callback: (result: object) => void }) => {
+  /**
+   * Get the status of a job.
+   * @param job_id - the id of the job.
+   * @callback - a function that will be called when the status of the job changes.
+   */
+  subscribeToJob = async (args: { job_id: string; callback: (result: object) => void }) => {
     const client = new Pusher("ed00ed3037c02a5fd912", {
       cluster: "eu",
     });
@@ -190,61 +254,10 @@ export class SelasClient {
     channel.bind("result", args.callback);
   };
 
-  /**
-   * Change the current credits of a customer. The customer must have been created with the createCustomer method. The credits can be negative,
-   * in which case the custome will lose credits and the remaining credits will be
-   *  recredited back to your account. A customer can't have negative credits.
-   *
-   * @param args.delta - the number of credits to add or remove from the customer
-   * @param args.id - the id of the customer you want to delete
-   * @returns the remaining number of credits if successful or an error message
-   *
-   * @example
-   * You can modify the number of credits of a customer.
-   * ```ts
-   * const {data: credits} = await selas.getCustomerCredits("leopold");
-   * console.log(`Leopold has ${credits} credits left.`); // Leopold has 25 credits left.
-   * const {data: credits} = await selas.changeCredits("leopold", 10);
-   * console.log(`Leopold has ${credits} credits now.`); // Leopold has 35 credits now.
-   * ```
-   *
-   */
-  addCredit = async (args: { app_user_id: string; amount: number }) => {
-    const { data, error } = await this.rpc("app_owner_add_user_credits", {
-      p_amount: args.amount,
-      p_app_user_id: args.app_user_id,
-    });
-    return { data, error };
-  };
+  
 
-  /**
-   * Create a token for a customer. The customer must have been created with the createCustomer method, and have at least 1 credit.
-   * The token can be used to access the API from the Client of @selas/selas-js package.
-   *
-   * @param args.id - the id of the customer who will use the token
-   * @param args.quota - the maximum number of credits the customer can spend using the token. It will not be
-   * possible to use the token if the customer has less credits than the quota.
-   * @param args.ttl - the time to live of the token in seconds. After this time, the token will be invalid.
-   * @param args.description - a description of the token. It will be used to identify the token in the dashboard.
-   * @returns the token containing a key attribute if successful or an error message
-   *
-   * @example
-   * Create a token for a customer.
-   * ```ts
-   * const {data: credits} = await selas.getCustomerCredits("leopold");
-   * console.log(`The token key is ${token.key}.`); // The token key is $a6IvYd6h12@.
-   * ```
-   *
-   */
-  async createToken(args: { app_user_id: string }) {
-    const { data, error } = await this.rpc("app_owner_create_user_token", { p_app_user_id: args.app_user_id });
 
-    if (error) {
-      return { data, error };
-    } else {
-      return { data: String(data), error };
-    }
-  }
+
 
   /**
    * Run a StableDiffusion job on Selas API. The job will be run on the first available worker.
