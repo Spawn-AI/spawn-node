@@ -3,9 +3,9 @@ const selas = require("../dist/index.cjs");
 const generateImage = async () => {
   const client = await selas.createSelasClient(
     {
-      app_id: "abe6dc68-ee80-418c-9e60-6b03f30f541c",
-      key: "4UR5M(pPDrsAE$o-",
-      secret: "SFF9WKLN3PmXT=43",
+      app_id: "2cef0cb9-35da-4d0b-b3b9-ed51caa67bab",
+      key: "Xn*ga&SZ&+wqcfsd",
+      secret: "*ekEFYPke()@-Ljm",
     },
     { branch: "main" }
   );
@@ -18,8 +18,8 @@ const generateImage = async () => {
     guidance_scale: 10,
     width: 512,
     height: 512,
-    prompt: "banana in the kitchen",
-    negative_prompt: "(weird: 0.15)",
+    prompt: "a cute calico cat artstation",
+    negative_prompt: "(weird: 0.15) (blur: 0.15) ugly vintage text (gray background: 0.15) (dog: 0.6)",
     image_format: "jpeg",
     translate_prompt: false,
     nsfw_filter: false,
@@ -31,7 +31,7 @@ const generateImage = async () => {
   if (response.data) {
     client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
   } else {
-    console.log("helol");
+    console.log(response.error);
   }
 };
 
