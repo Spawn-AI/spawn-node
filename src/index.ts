@@ -1,23 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-var Pusher = require('pusher-client');
-
-export type Customer = {
-  id?: string;
-  external_id: string;
-  user_id: string;
-  credits: number;
-};
-
-export type Token = {
-  id?: string;
-  key: string;
-  created_at?: string;
-  user_id: string;
-  ttl: number;
-  quota: number;
-  customer_id: string;
-  description?: string;
-};
+var Pusher = require("pusher-client");
 
 export type WorkerFilter = {
   id?: string;
