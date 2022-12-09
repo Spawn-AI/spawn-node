@@ -51,6 +51,15 @@ describe("testing selas-node", () => {
     }
   });
 
+  test("get service list", async () => {
+    const { data, error } = await selas.getServiceList();
+    expect(error).toBeNull();
+    expect(data).toBeDefined();
+    if (data){
+      console.log(data[1]['id']);
+    }
+  });
+
   test("creation of job", async () => {
     const config: StableDiffusionConfig = {
       steps: 28,
@@ -66,8 +75,6 @@ describe("testing selas-node", () => {
       translate_prompt: false,
       nsfw_filter: false,
     };
-
-    console.log(JSON.stringify(config));
     
     const { data, error } = await selas.postJob({
       service_id: "04cdf9c4-5338-4e32-9e63-e15b2150d7f9",

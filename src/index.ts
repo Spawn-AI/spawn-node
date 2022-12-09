@@ -225,6 +225,11 @@ export class SelasClient {
     return deleted;
   };
 
+  getServiceList = async () => {
+    const { data, error } = await this.rpc("app_owner_get_services", {});
+    return { data, error };
+  };
+
   /**
    * Create a new job. This job will be executed by the workers of the app.
    * @param service_id - the id of the service that will be executed.
