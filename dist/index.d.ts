@@ -101,7 +101,7 @@ declare class SelasClient {
         job_id: string;
         callback: (result: object) => void;
     }) => Promise<void>;
-    runStableDiffusion: (args: StableDiffusionConfig) => Promise<{
+    runStableDiffusion: (args: StableDiffusionConfig, model_name: string) => Promise<{
         data: null;
         error: _supabase_supabase_js.PostgrestError;
     } | {

@@ -1,5 +1,5 @@
 const selas = require("../dist/index.cjs");
-require('dotenv').config()
+require("dotenv").config();
 
 const generateImage = async () => {
   const client = await selas.createSelasClient(
@@ -11,26 +11,29 @@ const generateImage = async () => {
     { branch: "main" }
   );
 
-  const config = {
-    steps: 28,
+
+  const response = await client.runStableDiffusion({
+    prompt: "A comic potrait of a cyberpunk cyborg girl with big and cute eyes, fine - face, realistic shaded perfect face, fine details. night setting. very anime style. realistic shaded lighting poster by ilya kuvshinov katsuhiro, magali villeneuve, artgerm, jeremy lipkin and michael garmash",
+    negative_prompt: "istock, shutterstock, getty, alamy, dreamstime, yayphoto high contrast, (weird eyes:1.3), logo, watermark, photograph, blurry, grainy, duplicate eyes",
+    steps: 50,
     skip_steps: 0,
     batch_size: 1,
-    sampler: "k_euler",
-    guidance_scale: 10,
+    sampler: "dpm_multistep",
+    guidance_scale: 7,
     width: 512,
-    height: 512,
-    prompt: "a cute calico cat",
-    negative_prompt: "(weird: 0.15) (blur: 0.15) ugly vintage text (gray background: 0.15) (dog: 0.6)",
+    height: 640,
     image_format: "jpeg",
     translate_prompt: false,
-    nsfw_filter: false,
-    seed: 1
-  };
-
-  const response = await client.runStableDiffusion(config);
+    nsfw_filter: false
+  }, model_name="stable-diffusion-2-1-base");
 
   if (response.data) {
-    client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
+    client.subscribeToJob({
+      job_id: response.data,
+      callback: function (data) {
+        console.log(data);
+      },
+    });
   } else {
     console.log(response.error);
   }

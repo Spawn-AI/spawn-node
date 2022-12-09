@@ -77,9 +77,20 @@ class SelasClient {
       const channel = client.subscribe(`job-${args.job_id}`);
       channel.bind("result", args.callback);
     };
-    this.runStableDiffusion = async (args) => {
+    this.runStableDiffusion = async (args, model_name) => {
+      let service_id;
+      switch (model_name) {
+        case "stable-diffusion-1-5":
+          service_id = "04cdf9c4-5338-4e32-9e63-e15b2150d7f9";
+          break;
+        case "stable-diffusion-2-1-base":
+          service_id = "e48877c9-5c0b-4725-9fe6-8416a7e11a70";
+          break;
+        default:
+          throw new Error("Invalid model name");
+      }
       const response = await this.postJob({
-        service_id: "04cdf9c4-5338-4e32-9e63-e15b2150d7f9",
+        service_id,
         job_config: JSON.stringify(args)
       });
       if (response.error) {

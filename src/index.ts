@@ -54,7 +54,7 @@ export type StableDiffusionConfig = {
   steps: number;
   skip_steps: number;
   batch_size: 1 | 2 | 4 | 8 | 16;
-  sampler: "plms" | "ddim" | "k_lms" | "k_euler" | "k_euler_a";
+  sampler: "plms" | "ddim" | "k_lms" | "k_euler" | "k_euler_a" | "dpm_multistep";
   guidance_scale: number;
   width: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
   height: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
@@ -279,9 +279,24 @@ export class SelasClient {
    * @param args.nsfw_filter - if true, the image will be filtered to remove NSFW content. It can be useful if you want to generate images for a public website.
    * @param args.translate_prompt - if true, the prompt will be translated to English before being used by the algorithm. It can be useful if you want to generate images in a language that is not English.
    **/
-  runStableDiffusion = async (args: StableDiffusionConfig) => {
+  runStableDiffusion = async (args: StableDiffusionConfig, model_name: string) => {
+    let service_id: string;
+
+    switch (model_name) {
+      case "stable-diffusion-1-5":
+        service_id = "04cdf9c4-5338-4e32-9e63-e15b2150d7f9";
+        break;
+      
+      case "stable-diffusion-2-1-base":
+        service_id = "e48877c9-5c0b-4725-9fe6-8416a7e11a70";
+        break;
+      
+      default:
+        throw new Error("Invalid model name");
+    }
+
     const response = await this.postJob({
-      service_id: "04cdf9c4-5338-4e32-9e63-e15b2150d7f9",
+      service_id: service_id,
       job_config: JSON.stringify(args),
     });
 
