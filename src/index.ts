@@ -240,6 +240,15 @@ export class SelasClient {
     return { data, error };
   };
 
+  getAppUserJobHistoryDetail = async (args: { app_user_id: string; p_limit: number; p_offset: number }) => {
+    const { data, error } = await this.rpc("app_owner_get_job_history_detail", {
+      p_app_user_id: args.app_user_id,
+      p_limit: args.p_limit,
+      p_offset: args.p_offset
+    });
+    return { data, error };
+  };
+
   /**
    * Wait for the  the result of a job and returns it.
    * @param job_id - the id of the job.

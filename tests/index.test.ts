@@ -80,8 +80,10 @@ describe("testing selas-node", () => {
     }
   });
 
-  test("Subscription to a job", async () => {
-    
+  test("Get a app user's job history", async () => {
+    const { data, error } = await selas.getAppUserJobHistoryDetail({ app_user_id: user, p_limit : 10, p_offset : 0, });
+    expect(error).toBeNull();
+    expect(data).toBeDefined();
   });
 
 });
