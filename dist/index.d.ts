@@ -1,22 +1,6 @@
 import * as _supabase_supabase_js from '@supabase/supabase-js';
 import { SupabaseClient } from '@supabase/supabase-js';
 
-type Customer = {
-    id?: string;
-    external_id: string;
-    user_id: string;
-    credits: number;
-};
-type Token = {
-    id?: string;
-    key: string;
-    created_at?: string;
-    user_id: string;
-    ttl: number;
-    quota: number;
-    customer_id: string;
-    description?: string;
-};
 type WorkerFilter = {
     id?: string;
     name?: string;
@@ -48,24 +32,14 @@ declare class SelasClient {
     secret: string;
     worker_filter: WorkerFilter;
     constructor(supabase: SupabaseClient, app_id: string, key: string, secret: string, worker_filter?: WorkerFilter);
-    rpc: (fn: string, params: any) => Promise<{
-        data: any[] | null;
-        error: _supabase_supabase_js.PostgrestError | null;
-    }>;
-    echo: () => Promise<{
+    private rpc;
+    echo: (args: {
+        message: string;
+    }) => Promise<{
         data: any[] | null;
         error: _supabase_supabase_js.PostgrestError | null;
     }>;
     getAppSuperUser: () => Promise<{
-        data: string;
-        error: null;
-    } | {
-        data: any[] | null;
-        error: _supabase_supabase_js.PostgrestError;
-    }>;
-    getAppUserToken: (args: {
-        app_user_id: string;
-    }) => Promise<{
         data: string;
         error: null;
     } | {
@@ -78,6 +52,31 @@ declare class SelasClient {
     } | {
         data: any[] | null;
         error: _supabase_supabase_js.PostgrestError;
+    }>;
+    createToken: (args: {
+        app_user_id: string;
+    }) => Promise<{
+        data: any[] | null;
+        error: _supabase_supabase_js.PostgrestError;
+    } | {
+        data: string;
+        error: null;
+    }>;
+    getAppUserToken: (args: {
+        app_user_id: string;
+    }) => Promise<{
+        data: string;
+        error: null;
+    } | {
+        data: any[] | null;
+        error: _supabase_supabase_js.PostgrestError;
+    }>;
+    addCredit: (args: {
+        app_user_id: string;
+        amount: number;
+    }) => Promise<{
+        data: any[] | null;
+        error: _supabase_supabase_js.PostgrestError | null;
     }>;
     getAppUserCredits: (args: {
         app_user_id: string;
@@ -101,24 +100,8 @@ declare class SelasClient {
     subscribeToJob: (args: {
         job_id: string;
         callback: (result: object) => void;
-    }) => void;
-    addCredit: (args: {
-        app_user_id: string;
-        amount: number;
-    }) => Promise<{
-        data: any[] | null;
-        error: _supabase_supabase_js.PostgrestError | null;
-    }>;
-    createToken(args: {
-        app_user_id: string;
-    }): Promise<{
-        data: any[] | null;
-        error: _supabase_supabase_js.PostgrestError;
-    } | {
-        data: string;
-        error: null;
-    }>;
-    runStableDiffusion: (args: StableDiffusionConfig) => Promise<{
+    }) => Promise<void>;
+    runStableDiffusion: (args: StableDiffusionConfig, model_name: string) => Promise<{
         data: null;
         error: _supabase_supabase_js.PostgrestError;
     } | {
@@ -132,4 +115,4 @@ declare const createSelasClient: (credentials: {
     secret: string;
 }, worker_filter?: WorkerFilter) => Promise<SelasClient>;
 
-export { Customer, SelasClient, StableDiffusionConfig, Token, WorkerFilter, createSelasClient };
+export { SelasClient, StableDiffusionConfig, WorkerFilter, createSelasClient };

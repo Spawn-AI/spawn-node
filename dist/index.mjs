@@ -8,19 +8,11 @@ class SelasClient {
       const { data, error } = await this.supabase.rpc(fn, paramsWithSecret);
       return { data, error };
     };
-    this.echo = async () => {
-      return await this.rpc("app_owner_echo", {});
+    this.echo = async (args) => {
+      return await this.rpc("app_owner_echo", { message_app_owner: args.message });
     };
     this.getAppSuperUser = async () => {
       const { data, error } = await this.rpc("app_owner_get_super_user", {});
-      if (!error) {
-        return { data: String(data), error };
-      } else {
-        return { data, error };
-      }
-    };
-    this.getAppUserToken = async (args) => {
-      const { data, error } = await this.rpc("app_owner_get_user_token_value", { p_app_user_id: args.app_user_id });
       if (!error) {
         return { data: String(data), error };
       } else {
@@ -34,6 +26,29 @@ class SelasClient {
       } else {
         return { data, error };
       }
+    };
+    this.createToken = async (args) => {
+      const { data, error } = await this.rpc("app_owner_create_user_token", { p_app_user_id: args.app_user_id });
+      if (error) {
+        return { data, error };
+      } else {
+        return { data: String(data), error };
+      }
+    };
+    this.getAppUserToken = async (args) => {
+      const { data, error } = await this.rpc("app_owner_get_user_token_value", { p_app_user_id: args.app_user_id });
+      if (!error) {
+        return { data: String(data), error };
+      } else {
+        return { data, error };
+      }
+    };
+    this.addCredit = async (args) => {
+      const { data, error } = await this.rpc("app_owner_add_user_credits", {
+        p_amount: args.amount,
+        p_app_user_id: args.app_user_id
+      });
+      return { data, error };
     };
     this.getAppUserCredits = async (args) => {
       const { data, error } = await this.rpc("app_owner_get_user_credits", { p_app_user_id: args.app_user_id });
@@ -55,23 +70,27 @@ class SelasClient {
       });
       return { data, error };
     };
-    this.subscribeToJob = (args) => {
+    this.subscribeToJob = async (args) => {
       const client = new Pusher("ed00ed3037c02a5fd912", {
         cluster: "eu"
       });
       const channel = client.subscribe(`job-${args.job_id}`);
       channel.bind("result", args.callback);
     };
-    this.addCredit = async (args) => {
-      const { data, error } = await this.rpc("app_owner_add_user_credits", {
-        p_amount: args.amount,
-        p_app_user_id: args.app_user_id
-      });
-      return { data, error };
-    };
-    this.runStableDiffusion = async (args) => {
+    this.runStableDiffusion = async (args, model_name) => {
+      let service_id;
+      switch (model_name) {
+        case "stable-diffusion-1-5":
+          service_id = "04cdf9c4-5338-4e32-9e63-e15b2150d7f9";
+          break;
+        case "stable-diffusion-2-1-base":
+          service_id = "e48877c9-5c0b-4725-9fe6-8416a7e11a70";
+          break;
+        default:
+          throw new Error("Invalid model name");
+      }
       const response = await this.postJob({
-        service_id: "04cdf9c4-5338-4e32-9e63-e15b2150d7f9",
+        service_id,
         job_config: JSON.stringify(args)
       });
       if (response.error) {
@@ -85,14 +104,6 @@ class SelasClient {
     this.key = key;
     this.secret = secret;
     this.worker_filter = worker_filter || { branch: "prod" };
-  }
-  async createToken(args) {
-    const { data, error } = await this.rpc("app_owner_create_user_token", { p_app_user_id: args.app_user_id });
-    if (error) {
-      return { data, error };
-    } else {
-      return { data: String(data), error };
-    }
   }
 }
 const createSelasClient = async (credentials, worker_filter) => {
