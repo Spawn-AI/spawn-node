@@ -33,6 +33,11 @@ describe("testing selas-node", () => {
       user = data;
       expect(user).toBeDefined();
     }
+    let credit = await selas.setCredit({ app_user_id: user, amount: 100 });
+    expect(credit.error).toBeNull();
+    if (!credit.error) {
+      expect(credit.data).toEqual(100);
+    } 
   });
 
   test("token's life cycle", async () => {
@@ -44,7 +49,7 @@ describe("testing selas-node", () => {
         expect(token.data).toEqual(new_token.data);
       }
     }
-    let deleted = await selas.deactivateAppUser({ app_user_id: user });
+    let deleted = await selas.deleteAllTokenOfAppUser({ app_user_id: user });
     expect(deleted.error).toBeNull();
     if (!deleted.error) {
       expect(deleted.data).toEqual(true);
@@ -55,9 +60,6 @@ describe("testing selas-node", () => {
     const { data, error } = await selas.getServiceList();
     expect(error).toBeNull();
     expect(data).toBeDefined();
-    if (data){
-      console.log(data[1]['id']);
-    }
   });
 
   test("creation of job", async () => {
@@ -77,7 +79,7 @@ describe("testing selas-node", () => {
     };
     
     const { data, error } = await selas.postJob({
-      service_id: "04cdf9c4-5338-4e32-9e63-e15b2150d7f9",
+      service_name: "stable-diffusion-1-5",
       job_config: JSON.stringify(config),
     });
     expect(error).toBeNull();
@@ -88,7 +90,7 @@ describe("testing selas-node", () => {
   });
 
   test("Get a app user's job history", async () => {
-    const { data, error } = await selas.getAppUserJobHistoryDetail({ app_user_id: user, p_limit : 10, p_offset : 0, });
+    const { data, error } = await selas.getAppUserJobHistory({ app_user_id: user, p_limit : 10, p_offset : 0, });
     expect(error).toBeNull();
     expect(data).toBeDefined();
   });

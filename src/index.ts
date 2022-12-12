@@ -1,3 +1,5 @@
+//TODO documentation site web
+
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 var Pusher = require('pusher-client');
 
@@ -83,6 +85,7 @@ export class SelasClient {
   key: string;
   secret: string;
   worker_filter: WorkerFilter;
+  services: any[];
 
   /**
    * constructor creates a new SelasClient.
@@ -107,7 +110,18 @@ export class SelasClient {
     this.key = key;
     this.secret = secret;
     this.worker_filter = worker_filter || { branch: "prod" };
+
+    this.services = [];
   }
+
+    
+  getServiceList = async () => {
+    const { data, error } = await this.rpc("app_owner_get_services", {});
+    if (data) {
+      this.services = data;
+    }
+    return { data, error };
+  };
 
   /**
    * rpc is a wrapper around the supabase rpc function usable by the SelasClient.
@@ -193,8 +207,8 @@ export class SelasClient {
    * @param amount - the amount of credits to add.
    * @returns the new amount of credits of the user.
    */
-  addCredit = async (args: { app_user_id: string; amount: number }) => {
-      const { data, error } = await this.rpc("app_owner_add_user_credits", {
+  setCredit = async (args: { app_user_id: string; amount: number }) => {
+      const { data, error } = await this.rpc("app_owner_set_user_credits", {
         p_amount: args.amount,
         p_app_user_id: args.app_user_id,
       });
@@ -216,7 +230,7 @@ export class SelasClient {
    * @param app_user_id - the id of a user.
    * @returns true if the token was deleted; false otherwise.
    */
-  deactivateAppUser = async (args: { app_user_id: string }) => {
+  deleteAllTokenOfAppUser = async (args: { app_user_id: string }) => {
     var token = await this.rpc("app_owner_get_token", { p_app_user_id: args.app_user_id });
     var deleted = await this.rpc("app_owner_revoke_user_token", {
       p_app_user_id: args.app_user_id,
@@ -225,27 +239,35 @@ export class SelasClient {
     return deleted;
   };
 
-  getServiceList = async () => {
-    const { data, error } = await this.rpc("app_owner_get_services", {});
-    return { data, error };
-  };
-
   /**
    * Create a new job. This job will be executed by the workers of the app.
    * @param service_id - the id of the service that will be executed.
    * @param job_config - the configuration of the job.
    * @returns the id of the job.
    */
-  postJob = async (args: { service_id: string; job_config: string }) => {
+  postJob = async (args: { service_name: string; job_config: string }) => {
+    const service = this.services.find(service => service.name === args.service_name);
+    if (!service) {
+      throw new Error("Invalid model name")
+    }
     const { data, error } = await this.rpc("app_owner_post_job_admin", {
-      p_service_id: args.service_id,
+      p_service_id: service["id"],
       p_job_config: args.job_config,
       p_worker_filter: this.worker_filter,
     });
     return { data, error };
   };
 
-  getAppUserJobHistoryDetail = async (args: { app_user_id: string; p_limit: number; p_offset: number }) => {
+  /**
+   * Get the job history of a user of the app.
+   * @param app_user_id - the id of a user.
+   * @param p_limit - the maximum number of jobs to return.
+   * @param p_offset - the offset of the first job to return.
+   * @returns the job history of the user.
+   * @example
+   * client.getAppUserJobHistory({app_user_id: "1", p_limit: 10, p_offset: 0});
+   */
+  getAppUserJobHistory = async (args: { app_user_id: string; p_limit: number; p_offset: number }) => {
     const { data, error } = await this.rpc("app_owner_get_job_history_detail", {
       p_app_user_id: args.app_user_id,
       p_limit: args.p_limit,
@@ -294,23 +316,8 @@ export class SelasClient {
    * @param args.translate_prompt - if true, the prompt will be translated to English before being used by the algorithm. It can be useful if you want to generate images in a language that is not English.
    **/
   runStableDiffusion = async (args: StableDiffusionConfig, model_name: string) => {
-    let service_id: string;
-
-    switch (model_name) {
-      case "stable-diffusion-1-5":
-        service_id = "04cdf9c4-5338-4e32-9e63-e15b2150d7f9";
-        break;
-      
-      case "stable-diffusion-2-1-base":
-        service_id = "e48877c9-5c0b-4725-9fe6-8416a7e11a70";
-        break;
-      
-      default:
-        throw new Error("Invalid model name");
-    }
-
     const response = await this.postJob({
-      service_id: service_id,
+      service_name: model_name,
       job_config: JSON.stringify(args),
     });
 
@@ -348,5 +355,10 @@ export const createSelasClient = async (
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
 
-  return new SelasClient(supabase, credentials.app_id, credentials.key, credentials.secret, worker_filter);
+  const selas =  new SelasClient(supabase, credentials.app_id, credentials.key, credentials.secret, worker_filter);
+
+  selas.getServiceList();
+
+  return selas; 
+
 };
