@@ -239,6 +239,16 @@ export class SelasClient {
     return deleted;
   };
 
+  getServiceConfigCost = async (args: { service_name: string; job_config: string }) => {
+    const service_id = this.services.find(service => service.name === args.service_name)['id'];
+    if (!service_id) {
+      throw new Error("Invalid model name")
+    }    
+    const { data, error } = await this.supabase.rpc("get_service_config_cost_client", {p_service_id: service_id,
+                                                                                 p_config: args.job_config});
+    return { data, error };
+  };
+
   /**
    * Create a new job. This job will be executed by the workers of the app.
    * @param service_id - the id of the service that will be executed.
@@ -357,7 +367,7 @@ export const createSelasClient = async (
 
   const selas =  new SelasClient(supabase, credentials.app_id, credentials.key, credentials.secret, worker_filter);
 
-  selas.getServiceList();
+  await selas.getServiceList();
 
   return selas; 
 

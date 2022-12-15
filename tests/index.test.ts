@@ -57,6 +57,14 @@ describe("testing selas-node", () => {
   });
 
   test("get service list", async () => {
+    selas = await createSelasClient(
+      {
+        app_id: process.env.TEST_APP_ID!,
+        key: process.env.TEST_APP_KEY!,
+        secret: process.env.TEST_APP_SECRET!,
+      },
+      { branch: "main" }
+    );
     const { data, error } = await selas.getServiceList();
     expect(error).toBeNull();
     expect(data).toBeDefined();
@@ -95,4 +103,34 @@ describe("testing selas-node", () => {
     expect(data).toBeDefined();
   });
 
+  test("Get a config's cost for a job", async () => {
+    selas = await createSelasClient(
+      {
+        app_id: process.env.TEST_APP_ID!,
+        key: process.env.TEST_APP_KEY!,
+        secret: process.env.TEST_APP_SECRET!,
+      },
+      { branch: "main" }
+    );
+
+    const config: StableDiffusionConfig = {
+      steps: 28,
+      skip_steps: 0,
+      batch_size: 1,
+      sampler: "k_euler",
+      guidance_scale: 10,
+      width: 512,
+      height: 512,
+      prompt: "banana in the kitchen",
+      negative_prompt: "ugly",
+      image_format: "jpeg",
+      translate_prompt: false,
+      nsfw_filter: false,
+    };
+    const { data, error } = await selas.getServiceConfigCost({ service_name: "stable-diffusion-1-5", job_config: JSON.stringify(config)});
+    console.log(data);
+    expect(error).toBeNull();
+    expect(data).toBeDefined();
+
+  });
 });
