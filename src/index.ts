@@ -239,13 +239,13 @@ export class SelasClient {
     return deleted;
   };
 
-  getServiceConfigCost = async (args: { service_name: string; job_config: string }) => {
+  getServiceConfigCost = async (args: { service_name: string; job_config: object }) => {
     const service_id = this.services.find(service => service.name === args.service_name)['id'];
     if (!service_id) {
       throw new Error("Invalid model name")
     }    
     const { data, error } = await this.supabase.rpc("get_service_config_cost_client", {p_service_id: service_id,
-                                                                                 p_config: args.job_config});
+                                                                                 p_config: JSON.stringify(args.job_config)});
     return { data, error };
   };
 
@@ -255,14 +255,14 @@ export class SelasClient {
    * @param job_config - the configuration of the job.
    * @returns the id of the job.
    */
-  postJob = async (args: { service_name: string; job_config: string }) => {
+  postJob = async (args: { service_name: string; job_config: object }) => {
     const service = this.services.find(service => service.name === args.service_name);
     if (!service) {
       throw new Error("Invalid model name")
     }
     const { data, error } = await this.rpc("app_owner_post_job_admin", {
       p_service_id: service["id"],
-      p_job_config: args.job_config,
+      p_job_config: JSON.stringify(args.job_config),
       p_worker_filter: this.worker_filter,
     });
     return { data, error };
@@ -302,10 +302,6 @@ export class SelasClient {
     channel.bind("result", args.callback);
   };
 
-  
-
-
-
 
   /**
    * Run a StableDiffusion job on Selas API. The job will be run on the first available worker.
@@ -328,7 +324,7 @@ export class SelasClient {
   runStableDiffusion = async (args: StableDiffusionConfig, model_name: string) => {
     const response = await this.postJob({
       service_name: model_name,
-      job_config: JSON.stringify(args),
+      job_config: args,
     });
 
     if (response.error) {

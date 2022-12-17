@@ -88,7 +88,7 @@ describe("testing selas-node", () => {
     
     const { data, error } = await selas.postJob({
       service_name: "stable-diffusion-1-5",
-      job_config: JSON.stringify(config),
+      job_config: config,
     });
     expect(error).toBeNull();
     if (!error) {
@@ -127,7 +127,7 @@ describe("testing selas-node", () => {
       translate_prompt: false,
       nsfw_filter: false,
     };
-    const { data, error } = await selas.getServiceConfigCost({ service_name: "stable-diffusion-1-5", job_config: JSON.stringify(config)});
+    const { data, error } = await selas.getServiceConfigCost({ service_name: "stable-diffusion-1-5", job_config: config});
     console.log(data);
     expect(error).toBeNull();
     expect(data).toBeDefined();

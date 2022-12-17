@@ -12,7 +12,7 @@ type StableDiffusionConfig = {
     steps: number;
     skip_steps: number;
     batch_size: 1 | 2 | 4 | 8 | 16;
-    sampler: "plms" | "ddim" | "k_lms" | "k_euler" | "k_euler_a";
+    sampler: "plms" | "ddim" | "k_lms" | "k_euler" | "k_euler_a" | "dpm_multistep";
     guidance_scale: number;
     width: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
     height: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
@@ -31,7 +31,12 @@ declare class SelasClient {
     key: string;
     secret: string;
     worker_filter: WorkerFilter;
+    services: any[];
     constructor(supabase: SupabaseClient, app_id: string, key: string, secret: string, worker_filter?: WorkerFilter);
+    getServiceList: () => Promise<{
+        data: any[] | null;
+        error: _supabase_supabase_js.PostgrestError | null;
+    }>;
     private rpc;
     echo: (args: {
         message: string;
@@ -71,7 +76,7 @@ declare class SelasClient {
         data: any[] | null;
         error: _supabase_supabase_js.PostgrestError;
     }>;
-    addCredit: (args: {
+    setCredit: (args: {
         app_user_id: string;
         amount: number;
     }) => Promise<{
@@ -84,15 +89,30 @@ declare class SelasClient {
         data: any[] | null;
         error: _supabase_supabase_js.PostgrestError | null;
     }>;
-    deactivateAppUser: (args: {
+    deleteAllTokenOfAppUser: (args: {
         app_user_id: string;
     }) => Promise<{
         data: any[] | null;
         error: _supabase_supabase_js.PostgrestError | null;
     }>;
+    getServiceConfigCost: (args: {
+        service_name: string;
+        job_config: object;
+    }) => Promise<{
+        data: any[] | null;
+        error: _supabase_supabase_js.PostgrestError | null;
+    }>;
     postJob: (args: {
-        service_id: string;
-        job_config: string;
+        service_name: string;
+        job_config: object;
+    }) => Promise<{
+        data: any[] | null;
+        error: _supabase_supabase_js.PostgrestError | null;
+    }>;
+    getAppUserJobHistory: (args: {
+        app_user_id: string;
+        p_limit: number;
+        p_offset: number;
     }) => Promise<{
         data: any[] | null;
         error: _supabase_supabase_js.PostgrestError | null;
