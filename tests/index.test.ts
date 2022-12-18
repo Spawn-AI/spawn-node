@@ -105,7 +105,15 @@ describe("testing selas-node", () => {
   });
 
   test("Get a app user's job history", async () => {
-    const { data, error } = await selas.getAppUserJobHistory({ app_user_id: user, p_limit : 10, p_offset : 0, });
+    selas = await createSelasClient(
+      {
+        app_id: process.env.TEST_APP_ID!,
+        key: process.env.TEST_APP_KEY!,
+        secret: process.env.TEST_APP_SECRET!,
+      },
+      { branch: "main" }
+    );
+    const { data, error } = await selas.getAppUserJobHistory({ app_user_id: 'ee78e283-6f82-4205-b666-c73a172568be', p_limit : 10, p_offset : 0, });
     expect(error).toBeNull();
     expect(data).toBeDefined();
   });
