@@ -1,4 +1,4 @@
-import { createSelasClient, SelasClient, StableDiffusionConfig } from "../src/index";
+import { createSelasClient, SelasClient, StableDiffusionConfig, PatchConfig } from "../src/index";
 
 import * as dotenv from "dotenv";
 
@@ -70,26 +70,33 @@ describe("testing selas-node", () => {
     expect(data).toBeDefined();
   });
 
+  test("get add on list", async () => {
+    selas = await createSelasClient(
+      {
+        app_id: process.env.TEST_APP_ID!,
+        key: process.env.TEST_APP_KEY!,
+        secret: process.env.TEST_APP_SECRET!,
+      },
+      { branch: "main" }
+    );
+    const { data, error } = await selas.getAddOnList();
+    expect(error).toBeNull();
+    expect(data).toBeDefined();
+  });
+
   test("creation of job", async () => {
-    const config: StableDiffusionConfig = {
-      steps: 28,
-      skip_steps: 0,
-      batch_size: 1,
-      sampler: "k_euler",
-      guidance_scale: 10,
-      width: 512,
-      height: 512,
-      prompt: "banana in the kitchen",
-      negative_prompt: "ugly",
-      image_format: "jpeg",
-      translate_prompt: false,
-      nsfw_filter: false,
-    };
-    
-    const { data, error } = await selas.postJob({
-      service_name: "stable-diffusion-1-5",
-      job_config: config,
-    });
+    selas = await createSelasClient(
+      {
+        app_id: process.env.TEST_APP_ID!,
+        key: process.env.TEST_APP_KEY!,
+        secret: process.env.TEST_APP_SECRET!,
+      },
+      { branch: "main" }
+    );
+
+    const { data, error } = await selas.runStableDiffusion("banana in a chicken", 
+      {patches: [PatchConfig("patch-test", 0.5)]});
+
     expect(error).toBeNull();
     if (!error) {
       job = String(data);
@@ -125,12 +132,13 @@ describe("testing selas-node", () => {
       negative_prompt: "ugly",
       image_format: "jpeg",
       translate_prompt: false,
-      nsfw_filter: false,
+      nsfw_filter: false
     };
+
+
     const { data, error } = await selas.getServiceConfigCost({ service_name: "stable-diffusion-1-5", job_config: config});
     console.log(data);
     expect(error).toBeNull();
     expect(data).toBeDefined();
-
   });
 });
