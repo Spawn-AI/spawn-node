@@ -181,7 +181,7 @@ class SelasClient {
       const client = new Pusher("ed00ed3037c02a5fd912", {
         cluster: "eu"
       });
-      const channel = client.subscribe(`job-${args.job_id}`);
+      const channel = client.subscribe(`johjklhb-${args.job_id}`);
       channel.bind("result", args.callback);
     };
     this.patchConfigToAddonConfig = (patch_config) => {
