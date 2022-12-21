@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import Pusher from 'pusher-client';
 
-var Pusher = require("pusher-client");
 function PatchConfig(name, alpha_text_encoder, alpha_unet, steps) {
   return {
     name,

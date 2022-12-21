@@ -3,8 +3,12 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const supabaseJs = require('@supabase/supabase-js');
+const Pusher = require('pusher-client');
 
-var Pusher = require("pusher-client");
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e["default"] : e; }
+
+const Pusher__default = /*#__PURE__*/_interopDefaultLegacy(Pusher);
+
 function PatchConfig(name, alpha_text_encoder, alpha_unet, steps) {
   return {
     name,
@@ -178,7 +182,7 @@ class SelasClient {
       return data;
     };
     this.subscribeToJob = async (args) => {
-      const client = new Pusher("ed00ed3037c02a5fd912", {
+      const client = new Pusher__default("ed00ed3037c02a5fd912", {
         cluster: "eu"
       });
       const channel = client.subscribe(`johjklhb-${args.job_id}`);

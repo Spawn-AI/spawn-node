@@ -1,7 +1,9 @@
 //TODO documentation site web
 
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-var Pusher = require('pusher-client');
+
+// @ts-ignore
+import Pusher from 'pusher-client'; 
 
 /**
  * WorkerFilter is a filter to select workers.
