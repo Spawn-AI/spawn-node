@@ -6,7 +6,7 @@ dotenv.config();
 
 describe("testing selas-node", () => {
   let selas: SelasClient;
-  let user: string;
+  let user = "Skippy Jack";
   let job: string;
 
   test("creation of client", async () => {
@@ -21,39 +21,40 @@ describe("testing selas-node", () => {
 
     expect(selas).toBeDefined();
 
-    const { data, error } = await selas.echo({ message: "Hello"});
-    expect(error).toBeNull();
+    const data = await selas.echo({ message: "Hello"});
     expect(data).toEqual("Hello");
   });
 
   test("creation of users", async () => {
-    const { data, error } = await selas.createAppUser();
-    expect(error).toBeNull();
-    if (!error) {
-      user = data;
-      expect(user).toBeDefined();
-    }
-    let credit = await selas.setCredit({ app_user_id: user, amount: 100 });
-    expect(credit.error).toBeNull();
-    if (!credit.error) {
-      expect(credit.data).toEqual(100);
-    } 
+    selas = await createSelasClient(
+      {
+        app_id: process.env.TEST_APP_ID!,
+        key: process.env.TEST_APP_KEY!,
+        secret: process.env.TEST_APP_SECRET!,
+      },
+      { branch: "main" }
+    );
+
+    //const data = await selas.createAppUser({external_id: "Jacques proutu"});
+    //expect(data).toBeDefined();
+    
+    let credit = await selas.setCredit({ app_user_external_id: user, amount: 100 });
+    expect(credit).toEqual(100);
   });
 
   test("token's life cycle", async () => {
-    let new_token = await selas.createToken({ app_user_id: user });
-    expect(new_token.error).toBeNull();
-    if (!new_token.error) {
-      let token = await selas.getAppUserToken({ app_user_id: user });
-      if (!token.error) {
-        expect(token.data).toEqual(new_token.data);
-      }
-    }
-    let deleted = await selas.deleteAllTokenOfAppUser({ app_user_id: user });
-    expect(deleted.error).toBeNull();
-    if (!deleted.error) {
-      expect(deleted.data).toEqual(true);
-    }
+    const new_token = await selas.createToken({ app_user_external_id: user });
+    
+    expect (new_token).toBeDefined();
+
+    const token = await selas.getAppUserToken({ app_user_external_id: user });
+
+    expect(token).toEqual(new_token);
+
+    const deleted = await selas.deleteAllTokenOfAppUser({ app_user_external_id: user });
+
+    expect(deleted).toEqual(true);
+    
   });
 
   test("get service list", async () => {
@@ -65,8 +66,7 @@ describe("testing selas-node", () => {
       },
       { branch: "main" }
     );
-    const { data, error } = await selas.getServiceList();
-    expect(error).toBeNull();
+    const data = await selas.getServiceList();
     expect(data).toBeDefined();
   });
 
@@ -79,8 +79,7 @@ describe("testing selas-node", () => {
       },
       { branch: "main" }
     );
-    const { data, error } = await selas.getAddOnList();
-    expect(error).toBeNull();
+    const data = await selas.getAddOnList();
     expect(data).toBeDefined();
   });
 
@@ -94,14 +93,13 @@ describe("testing selas-node", () => {
       { branch: "main" }
     );
 
-    const { data, error } = await selas.runStableDiffusion("banana in a chicken", 
-      {patches: [PatchConfig("patch-test", 0.5)]});
+    const data = await selas.runStableDiffusion("banana in a kitchen",
+      {patches: [PatchConfig("patch-test")]});
 
-    expect(error).toBeNull();
-    if (!error) {
-      job = String(data);
-      expect(job).toBeDefined();
-    }
+
+    job = String(data);
+    expect(job).toBeDefined();
+    
   });
 
   test("Get a app user's job history", async () => {
@@ -113,8 +111,7 @@ describe("testing selas-node", () => {
       },
       { branch: "main" }
     );
-    const { data, error } = await selas.getAppUserJobHistory({ app_user_id: 'ee78e283-6f82-4205-b666-c73a172568be', p_limit : 10, p_offset : 0, });
-    expect(error).toBeNull();
+    const data = await selas.getAppUserJobHistory({ app_user_external_id: user, p_limit : 10, p_offset : 0, });
     expect(data).toBeDefined();
   });
 
@@ -143,10 +140,7 @@ describe("testing selas-node", () => {
       nsfw_filter: false
     };
 
-
-    const { data, error } = await selas.getServiceConfigCost({ service_name: "stable-diffusion-1-5", job_config: config});
-    console.log(data);
-    expect(error).toBeNull();
+    const data = await selas.getServiceConfigCost({ service_name: "stable-diffusion-1-5", job_config: config});
     expect(data).toBeDefined();
   });
 });

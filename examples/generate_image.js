@@ -11,7 +11,6 @@ const generateImage = async () => {
     { branch: "main" }
   );
 
-
   const response = await client.runStableDiffusion({
     prompt: "A comic potrait of a cyberpunk cyborg girl with big and cute eyes, fine - face, realistic shaded perfect face, fine details. night setting. very anime style. realistic shaded lighting poster by ilya kuvshinov katsuhiro, magali villeneuve, artgerm, jeremy lipkin and michael garmash",
     negative_prompt: "istock, shutterstock, getty, alamy, dreamstime, yayphoto high contrast, (weird eyes:1.3), logo, watermark, photograph, blurry, grainy, duplicate eyes",
@@ -29,7 +28,7 @@ const generateImage = async () => {
 
   if (response.data) {
     client.subscribeToJob({
-      job_id: response.data,
+      job_id: response.data['job_id'],  
       callback: function (data) {
         console.log(data);
       },

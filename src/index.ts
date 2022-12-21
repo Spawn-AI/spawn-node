@@ -141,21 +141,54 @@ export class SelasClient {
     this.add_ons = [];
   }
 
+  handle_error = (error: any) => {
+    if (error.code === '') {
+      throw new Error("The database cannot be reached. Contact the administrator.");
+    }
+    if (error.message === "Invalid API key"){
+      throw new Error("The API key is invalid. Contact the administrator.");
+    }
+    if (error.code === '22P02'){
+      throw new Error("The credentials are not correct.");
+    }
+    if (error.code === 'P0001'){
+      throw new Error(error.message);
+    }
+  }
+
+  test_connection = async () => {
+    const { data, error } =  await this.rpc("app_user_echo", {message_app_user: "check"});
+    if (error) {
+      this.handle_error(error);
+    }
+    if (data){
+      if (String(data) !== "check") {
+        throw new Error("There is a problem with the database. Contact the administrator.");
+      }
+    }
+  }
+
     
   getServiceList = async () => {
     const { data, error } = await this.rpc("app_owner_get_services", {});
+    if (error) {
+      this.handle_error(error);
+    }
     if (data) {
       this.services = data;
     }
-    return { data, error };
+    return data;
   };
 
   getAddOnList = async () => {
     const { data, error } = await this.rpc("app_owner_get_add_ons", {});
+    if (error) {
+      this.handle_error(error);
+    }
     if (data) {
       this.add_ons = data;
     }
-    return { data, error };
+    return data;
   };
 
   /**
@@ -179,33 +212,31 @@ export class SelasClient {
    * @returns a text message which is the same as the input message.
    */
   echo = async (args: {message: string}) => {
-    return await this.rpc("app_owner_echo", {message_app_owner: args.message});
-  };
-
-  /**
-   * Get the super user of the app. This super user always has an infinite amount of credits and a token.  
-   * @returns the id of the super user.
-   */
-  getAppSuperUser = async () => {
-    const { data, error } = await this.rpc("app_owner_get_super_user", {});
-    if (!error) {
-      return { data: String(data), error };
-    } else {
-      return { data, error };
+    const {data, error} = await this.rpc("app_owner_echo", {message_app_owner: args.message});
+    if (error) {
+      this.handle_error(error);
     }
+    return data;
   };
 
   /**
    * Create a new user for the app. This user will have 0 credits. This user will not be able to post jobs without a token.
    * @returns the id of the new user.
    */
-  createAppUser = async () => {
-    const { data, error } = await this.rpc("app_owner_create_user", {});
-    if (!error) {
-      return { data: String(data), error };
-    } else {
-      return { data, error };
+  createAppUser = async (args: {external_id: string}) => {
+    const { data, error } = await this.rpc("app_owner_create_user", {p_external_id: args.external_id});
+    if (error) {
+      this.handle_error(error);
     }
+    return data;
+  };
+
+  private getUserId = async (args: {external_id: string}) => {
+    const { data, error } = await this.rpc("app_owner_get_user_id", {p_app_user_external_id: args.external_id});
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
   };
 
   /**
@@ -213,13 +244,13 @@ export class SelasClient {
    * @param app_user_id - the id of the user.
    * @returns a text that contains the token of the user.
    */
-  createToken = async (args: { app_user_id: string }) => {
-    const { data, error } = await this.rpc("app_owner_create_user_token", { p_app_user_id: args.app_user_id });
+  createToken = async (args: { app_user_external_id: string }) => {
+    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
+    const { data, error } = await this.rpc("app_owner_create_user_token", { p_app_user_id: app_user_id });
     if (error) {
-      return { data, error };
-    } else {
-      return { data: String(data), error };
+      this.handle_error(error);
     }
+    return data;
   }
 
   /**
@@ -227,13 +258,13 @@ export class SelasClient {
    * @param app_user_id - the id of a user.
    * @returns a text that contains the token of the user.
   */
-  getAppUserToken = async (args: { app_user_id: string }) => {
-    const { data, error } = await this.rpc("app_owner_get_user_token_value", { p_app_user_id: args.app_user_id });
-    if (!error) {
-      return { data: String(data), error };
-    } else {
-      return { data, error };
+  getAppUserToken = async (args: { app_user_external_id: string }) => {
+    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
+    const { data, error } = await this.rpc("app_owner_get_user_token_value", { p_app_user_id: app_user_id });
+    if (error) {
+      this.handle_error(error);
     }
+    return data;
   };
 
   /**
@@ -242,22 +273,30 @@ export class SelasClient {
    * @param amount - the amount of credits to add.
    * @returns the new amount of credits of the user.
    */
-  setCredit = async (args: { app_user_id: string; amount: number }) => {
-      const { data, error } = await this.rpc("app_owner_set_user_credits", {
-        p_amount: args.amount,
-        p_app_user_id: args.app_user_id,
-      });
-      return { data, error };
-    };
+  setCredit = async (args: { app_user_external_id: string; amount: number }) => {
+    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
+    const { data, error } = await this.rpc("app_owner_set_user_credits", {
+      p_amount: args.amount,
+      p_app_user_id: app_user_id,
+    });
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
+  };
 
   /**
    * Allows the app owner to get the credits of a user of the app.
    * @param app_user_id - the id of a user.
    * @returns the amount of credits of the user.
    */
-  getAppUserCredits = async (args: { app_user_id: string }) => {
-    const { data, error } = await this.rpc("app_owner_get_user_credits", { p_app_user_id: args.app_user_id });
-    return { data, error };
+  getAppUserCredits = async (args: { app_user_external_id: string }) => {
+    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
+    const { data, error } = await this.rpc("app_owner_get_user_credits", { p_app_user_id: app_user_id });
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
   };
 
   /**
@@ -265,13 +304,20 @@ export class SelasClient {
    * @param app_user_id - the id of a user.
    * @returns true if the token was deleted; false otherwise.
    */
-  deleteAllTokenOfAppUser = async (args: { app_user_id: string }) => {
-    var token = await this.rpc("app_owner_get_token", { p_app_user_id: args.app_user_id });
+  deleteAllTokenOfAppUser = async (args: { app_user_external_id: string }) => {
+    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
+    var token = await this.rpc("app_owner_get_token", { p_app_user_id: app_user_id });
+    if (token.error) {
+      this.handle_error(token.error);
+    }
     var deleted = await this.rpc("app_owner_revoke_user_token", {
-      p_app_user_id: args.app_user_id,
+      p_app_user_id: app_user_id,
       p_token: token.data,
     });
-    return deleted;
+    if (deleted.error) {
+      this.handle_error(deleted.error);
+    }
+    return deleted.data;
   };
 
   getServiceConfigCost = async (args: { service_name: string; job_config: object }) => {
@@ -281,7 +327,10 @@ export class SelasClient {
     }    
     const { data, error } = await this.supabase.rpc("get_service_config_cost_client", {p_service_id: service_id,
                                                                                  p_config: JSON.stringify(args.job_config)});
-    return { data, error };
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
   };
 
   /**
@@ -302,7 +351,10 @@ export class SelasClient {
       p_job_config: JSON.stringify(args.job_config),
       p_worker_filter: this.worker_filter,
     });
-    return { data, error };
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
   };
 
   /**
@@ -314,13 +366,17 @@ export class SelasClient {
    * @example
    * client.getAppUserJobHistory({app_user_id: "1", p_limit: 10, p_offset: 0});
    */
-  getAppUserJobHistory = async (args: { app_user_id: string; p_limit: number; p_offset: number }) => {
+  getAppUserJobHistory = async (args: { app_user_external_id: string; p_limit: number; p_offset: number }) => {
+    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
     const { data, error } = await this.rpc("app_owner_get_job_history_detail", {
-      p_app_user_id: args.app_user_id,
+      p_app_user_id: app_user_id,
       p_limit: args.p_limit,
       p_offset: args.p_offset
     });
-    return { data, error };
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
   };
 
   /**
@@ -334,7 +390,6 @@ export class SelasClient {
     const client = new Pusher("ed00ed3037c02a5fd912", {
       cluster: "eu",
     });
-
     const channel = client.subscribe(`job-${args.job_id}`);
     channel.bind("result", args.callback);
   };
@@ -380,6 +435,9 @@ export class SelasClient {
 
     const service_name = args?.service_name || "stable-diffusion-2-1-base";
     // check if the model name has stable-diffusion as an interface
+    if (!this.services.find(service => service.name === service_name)) {
+      throw new Error(`The service ${service_name} does not exist`);
+    }
     const service_interface = this.services.find(service => service.name === service_name).interface;
     if (service_interface !== "stable-diffusion") {
       throw new Error(`The service ${service_name} does not have the stable-diffusion interface`);
@@ -387,13 +445,15 @@ export class SelasClient {
 
     // check if the add on is available for this service
     for (const patch of args?.patches || []) {
+      if (!this.add_ons.find(add_on => add_on.name === patch.name)) {
+        throw new Error(`The add-on ${patch.name} does not exist`);
+      }
       let service = this.add_ons.find(add_on => add_on.name === patch.name).service_name;
       console.log(service);
       if (!this.add_ons.find(add_on => add_on.name === patch.name).service_name.includes(service_name)) {
         throw new Error(`The service ${service_name} does not have the add-on ${patch.name}`);
       }
     }
-
 
     let add_ons = args?.patches?.map(patch => this.patchConfigToAddonConfig(patch));
     
@@ -417,11 +477,7 @@ export class SelasClient {
       job_config: config,
     });
 
-    if (response.error) {
-      return { data: null, error: response.error };
-    } else {
-      return { data: response.data, error: null };
-    }
+    return response;
   };
 }
 
@@ -451,7 +507,14 @@ export const createSelasClient = async (
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
 
-  const selas =  new SelasClient(supabase, credentials.app_id, credentials.key, credentials.secret, worker_filter);
+  const selas =  new SelasClient(
+    supabase, 
+    credentials.app_id, 
+    credentials.key, 
+    credentials.secret, 
+    worker_filter);
+
+  await selas.test_connection();
 
   await selas.getServiceList();
   await selas.getAddOnList();
