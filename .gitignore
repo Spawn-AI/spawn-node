@@ -107,3 +107,9 @@ typings/
 # TernJS port file
 .tern-port
 /.vs
+dist/index.cjs
+dist/index.mjs
+dist/index.cjs
+dist/index.mjs
+
+dist

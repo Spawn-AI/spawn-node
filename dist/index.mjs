@@ -177,7 +177,7 @@ class SelasClient {
       const client = new Pusher("ed00ed3037c02a5fd912", {
         cluster: "eu"
       });
-      const channel = client.subscribe(`johjklhb-${args.job_id}`);
+      const channel = client.subscribe(`job-${args.job_id}`);
       channel.bind("result", args.callback);
     };
     this.patchConfigToAddonConfig = (patch_config) => {
@@ -243,7 +243,7 @@ class SelasClient {
 const createSelasClient = async (credentials, worker_filter) => {
   const SUPABASE_URL = "https://lgwrsefyncubvpholtmh.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxnd3JzZWZ5bmN1YnZwaG9sdG1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Njk0MDE0MzYsImV4cCI6MTk4NDk3NzQzNn0.o-QO3JKyJ5E-XzWRPC9WdWHY8WjzEFRRnDRSflLzHsc";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true } });
   const selas = new SelasClient(
     supabase,
     credentials.app_id,
