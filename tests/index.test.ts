@@ -36,7 +36,7 @@ describe("testing selas-node", () => {
     );
 
     const data = await selas.createAppUser({external_id: "Jacques Binouze"});
-    //expect(data).toBeDefined();
+    expect(data).toBeDefined();
     
     let credit = await selas.setCredit({ app_user_external_id: user, amount: 100 });
     expect(credit).toEqual(100);
