@@ -450,8 +450,8 @@ export class SelasClient {
       if (!this.add_ons.find(add_on => add_on.name === patch.name)) {
         throw new Error(`The add-on ${patch.name} does not exist`);
       }
-      let service = this.add_ons.find(add_on => add_on.name === patch.name).service_name;
-      console.log(service);
+      //let service = this.add_ons.find(add_on => add_on.name === patch.name).service_name;
+      //console.log(service);
       if (!this.add_ons.find(add_on => add_on.name === patch.name).service_name.includes(service_name)) {
         throw new Error(`The service ${service_name} does not have the add-on ${patch.name}`);
       }
@@ -478,8 +478,16 @@ export class SelasClient {
       service_name: service_name,
       job_config: config,
     });
-
     return response;
+  };
+
+  //return the number of active worker
+  getCountActiveWorker = async () => {
+    const { data, error } = await this.supabase.rpc("get_active_worker_count", {p_worker_filter: this.worker_filter});
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
   };
 }
 

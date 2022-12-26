@@ -203,8 +203,6 @@ class SelasClient {
         if (!this.add_ons.find((add_on) => add_on.name === patch.name)) {
           throw new Error(`The add-on ${patch.name} does not exist`);
         }
-        let service = this.add_ons.find((add_on) => add_on.name === patch.name).service_name;
-        console.log(service);
         if (!this.add_ons.find((add_on) => add_on.name === patch.name).service_name.includes(service_name)) {
           throw new Error(`The service ${service_name} does not have the add-on ${patch.name}`);
         }

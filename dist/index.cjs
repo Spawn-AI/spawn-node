@@ -1,13 +1,7 @@
 'use strict';
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
 const supabaseJs = require('@supabase/supabase-js');
 const Pusher = require('pusher-client');
-
-function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e["default"] : e; }
-
-const Pusher__default = /*#__PURE__*/_interopDefaultLegacy(Pusher);
 
 function PatchConfig(name, alpha_text_encoder, alpha_unet, steps) {
   return {
@@ -182,7 +176,7 @@ class SelasClient {
       return data;
     };
     this.subscribeToJob = async (args) => {
-      const client = new Pusher__default("ed00ed3037c02a5fd912", {
+      const client = new Pusher("ed00ed3037c02a5fd912", {
         cluster: "eu"
       });
       const channel = client.subscribe(`job-${args.job_id}`);
@@ -211,8 +205,6 @@ class SelasClient {
         if (!this.add_ons.find((add_on) => add_on.name === patch.name)) {
           throw new Error(`The add-on ${patch.name} does not exist`);
         }
-        let service = this.add_ons.find((add_on) => add_on.name === patch.name).service_name;
-        console.log(service);
         if (!this.add_ons.find((add_on) => add_on.name === patch.name).service_name.includes(service_name)) {
           throw new Error(`The service ${service_name} does not have the add-on ${patch.name}`);
         }

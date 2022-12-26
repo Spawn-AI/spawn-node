@@ -12,6 +12,7 @@ const generateImage = async () => {
   );
 
   const response = await client.runStableDiffusion("a cute cake");
+  console.log(response);
 
   if (response) {
     await client.subscribeToJob({
