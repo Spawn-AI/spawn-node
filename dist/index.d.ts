@@ -107,6 +107,7 @@ declare class SelasClient {
         nsfw_filter?: boolean;
         patches?: PatchConfig[];
     }) => Promise<any[] | null>;
+    getCountActiveWorker: () => Promise<any[] | null>;
 }
 declare const createSelasClient: (credentials: {
     app_id: string;

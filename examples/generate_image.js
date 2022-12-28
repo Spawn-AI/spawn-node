@@ -7,9 +7,10 @@ const generateImage = async () => {
       app_id: process.env.TEST_APP_ID,
       key: process.env.TEST_APP_KEY,
       secret: process.env.TEST_APP_SECRET,
-    },
-    { branch: "main" }
+    }
   );
+
+  console.log(await client.getCountActiveWorker());
 
   const response = await client.runStableDiffusion("a cute cake");
   console.log(response);
