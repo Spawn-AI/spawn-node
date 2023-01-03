@@ -1,1 +1,0 @@
-module.exports = require("C:/Users/dorya/Documents/Selas/selas-node/node_modules/jiti/lib/index.js")(null, { interopDefault: true, esmResolve: true })("C:/Users/dorya/Documents/Selas/selas-node/src/index.ts")
