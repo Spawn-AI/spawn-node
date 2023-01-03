@@ -12,7 +12,12 @@ const generateImage = async () => {
 
   console.log(await client.getCountActiveWorker());
 
-  const response = await client.runStableDiffusion("François Juppé",{patches: [PatchConfig("patch-test")]});
+  const response = await client.runStableDiffusion("François Juppé",{patches: [
+    {"name": "test-patch",
+      alpha_text_encoder: 0.5,
+      alpha_unet: 0.5,
+      steps: 1000}
+  ]});
   console.log(response);
 
   if (response) {
