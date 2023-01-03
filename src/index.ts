@@ -21,6 +21,18 @@ export type WorkerFilter = {
   cluster?: number;
 };
 
+export type TrainingImage = {
+  url: string;
+  label: string;
+}
+
+export function TrainingImage(url: string, label: string): TrainingImage {
+  return {
+    url: url,
+    label: label,
+  };
+}
+
 export type PatchConfig = {
   name: string;
   alpha_text_encoder: number;
@@ -95,6 +107,15 @@ export type Patch = {
   name: string;
   alpha_text_encoder: number;
   alpha_unet: number;
+}
+
+export type PatchTrainerConfig = {
+  dataset: any[];
+  patch_name: string;
+  description: string;
+  learning_rate: number;
+  steps: number;
+  rank: number;
 }
 
 /**
@@ -408,7 +429,29 @@ export class SelasClient {
     }
   };
 
+  runPatchTrainer = async (dataset:TrainingImage[],patch_name: string,args?: {service_name?: string, description?: string, learning_rate?: number, steps?: number, rank?: number}) => {
+    const service_name = args?.service_name || "patch_trainer_v1";
+    // check if the model name has stable-diffusion as an interface
+    if (!this.services.find(service => service.name === service_name)) {
+      throw new Error(`The service ${service_name} does not exist`);
+    }
+    const service_interface = this.services.find(service => service.name === service_name).interface;
+    if (service_interface !== "train-patch-stable-diffusion") {
+      throw new Error(`The service ${service_name} does not have the train-patch-stable-diffusion interface`);
+    }
 
+    const trainerConfig: PatchTrainerConfig = {
+      dataset: dataset,
+      patch_name: patch_name,
+      description: args?.description || "",
+      learning_rate: args?.learning_rate || 1e-4,
+      steps: args?.steps || 1000,
+      rank: args?.rank || 4,
+    };
+
+    const response = await this.postJob({service_name: service_name, job_config: trainerConfig});
+    return response;
+  };
 
   /**
    * Run a StableDiffusion job on Selas API. The job will be run on the first available worker.
@@ -489,6 +532,15 @@ export class SelasClient {
     }
     return data;
   };
+
+  //return the results of a job
+  getResult = async (job_id: string) => {
+    const { data, error } = await this.rpc("app_owner_get_result", {p_job_id: job_id});
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
+  }
 }
 
 /**

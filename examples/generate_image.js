@@ -11,7 +11,7 @@ const generateImage = async () => {
     { branch: "main" }
   );
 
-  const response = await client.runStableDiffusion("a cute cake");
+  const response = await client.runStableDiffusion("François Juppé",{patches: [PatchConfig("patch-test")]});
   console.log(response);
 
   if (response) {
