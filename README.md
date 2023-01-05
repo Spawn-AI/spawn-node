@@ -106,6 +106,11 @@ const is_deleted = await selas.deleteAddOn('User1/forest add-on');
 
 Even if this the Selas-node client is created to manage applications and its users, it has all the needed methods for running jobs on the Selas platform. When running jobs on Selas-node, you are seen as a super-user and do not have to use tokens or credit.
 
+To know how many workers are active on the Selas platform, you can use the getCountActiveWorker method. It will return the number of workers for each service.
+```js
+let workers = await client.getCountActiveWorker();
+```
+
 #### Running an image generation job
 
 The following example shows how to run a stable diffusion job with minimal parameters.

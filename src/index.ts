@@ -518,17 +518,14 @@ export class SelasClient {
    * @example
    *  client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
    */
-  subscribeToJob = async (
-    job_id: string,
-    callback: (result: object) => void
-  ) => {
+  subscribeToJob = async (args: { job_id: string; callback: (result: object) => void }) => {
     const client = new Pusher("ed00ed3037c02a5fd912", {
       cluster: "eu",
     });
-    const channel = client.subscribe(`job-${job_id}`);
-    channel.bind("result", callback);
-  };
 
+    const channel = client.subscribe(`job-${args.job_id}`);
+    channel.bind("result", args.callback);
+  };
   /**
    * Run a StableDiffusion job on Selas API. The job will be run on the first available worker.
    *
