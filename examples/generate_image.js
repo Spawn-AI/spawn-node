@@ -10,10 +10,10 @@ const generateImage = async () => {
 
   console.log(await client.getCountActiveWorker());
 
-  const response = await client.runStableDiffusion("A person in front a car", {
+  const response = await client.runStableDiffusion("A person in front of a car", {
     patches: [
       {
-        name: "patch-testou",
+        name: 'Skippy Jack/f-compote2',
         alpha_text_encoder: 0.5,
         alpha_unet: 0.5,
         steps: 1000,

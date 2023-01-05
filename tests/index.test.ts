@@ -97,7 +97,14 @@ describe("testing selas-node", () => {
       { branch: "main" }
     );
 
-    const data = await selas.runStableDiffusion("banana in a kitchen");
+    const data = await selas.runStableDiffusion("banana in a kitchen",{patches: [
+      {
+        name: 'Skippy Jack/f-compote2',
+        alpha_unet: 1,
+        alpha_text_encoder:1,
+        steps: 100
+      }
+    ]});
 
     job = String(data);
     expect(job).toBeDefined();
