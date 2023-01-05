@@ -3,7 +3,7 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 // @ts-ignore
-import Pusher from 'pusher-client'; 
+import Pusher from "pusher-client";
 
 /**
  * WorkerFilter is a filter to select workers.
@@ -21,35 +21,29 @@ export type WorkerFilter = {
   cluster?: number;
 };
 
+/**
+ * TrainingImage contains the informations necessary for the training of a patch.
+ * @param url - URL of the image.
+ * @param label - Label of the image. The label is a description of the image.
+ */
 export type TrainingImage = {
   url: string;
   label: string;
-}
+};
 
-export function TrainingImage(url: string, label: string): TrainingImage {
-  return {
-    url: url,
-    label: label,
-  };
-}
-
+/**
+ * PatchConfig is the configuration for a patch.
+ * @param name - Name of the patch.
+ * @param alpha_text_encoder - Weight of the alteration of the patch on Stable Diffusion's text encoder
+ * @param alpha_unet - Weight of the alteration of the patch on Stable Diffusion's UNet
+ * @param steps - Number of steps to train the patch.
+ */
 export type PatchConfig = {
   name: string;
   alpha_text_encoder: number;
   alpha_unet: number;
-  steps: number ;
+  steps: number;
 };
-
-//Create an object of type PatchConfig
-export function PatchConfig(name: string, alpha_text_encoder?: number,alpha_unet?: number,steps?: number): PatchConfig {
-  return {
-    name: name,
-    alpha_text_encoder: alpha_text_encoder || 1.0,
-    alpha_unet: alpha_unet || 1.0,
-    steps: steps || 100,
-  };
-}
-
 
 /**
  * StableDiffusionConfig is the configuration for the stable diffusion job.
@@ -68,7 +62,7 @@ export function PatchConfig(name: string, alpha_text_encoder?: number,alpha_unet
  * @param translate_prompt - Whether to translate the prompt.
  * @param nsfw_filter - Whether to filter nsfw images.
  * @param seed - Seed to use for the job (optional).
- * @example - 
+ * @example -
  *    const config: StableDiffusionConfig = {
  *    steps: 28,
  *    skip_steps: 0,
@@ -88,7 +82,13 @@ export type StableDiffusionConfig = {
   steps: number;
   skip_steps: number;
   batch_size: 1 | 2 | 4 | 8 | 16;
-  sampler: "plms" | "ddim" | "k_lms" | "k_euler" | "k_euler_a" | "dpm_multistep";
+  sampler:
+    | "plms"
+    | "ddim"
+    | "k_lms"
+    | "k_euler"
+    | "k_euler_a"
+    | "dpm_multistep";
   guidance_scale: number;
   width: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
   height: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
@@ -103,12 +103,15 @@ export type StableDiffusionConfig = {
   add_ons?: any[];
 };
 
-export type Patch = {
-  name: string;
-  alpha_text_encoder: number;
-  alpha_unet: number;
-}
-
+/**
+ * PatchTrainerConfig is the configuration for the patch trainer job.
+ * @param dataset - Dataset to use for the job.
+ * @param patch_name - Name of the patch to train.
+ * @param description - Description of the patch to train.
+ * @param learning_rate - Learning rate to use for the training.
+ * @param steps - Number of steps for the training of the patch.
+ * @param rank - Size of the patch to train.
+ */
 export type PatchTrainerConfig = {
   dataset: any[];
   patch_name: string;
@@ -116,7 +119,7 @@ export type PatchTrainerConfig = {
   learning_rate: number;
   steps: number;
   rank: number;
-}
+};
 
 /**
  * SelasClient is a client for the Selas API.
@@ -138,11 +141,11 @@ export class SelasClient {
 
   /**
    * constructor creates a new SelasClient.
-   * @param supabase 
-   * @param app_id 
-   * @param key 
-   * @param secret 
-   * @param worker_filter 
+   * @param supabase
+   * @param app_id
+   * @param key
+   * @param secret
+   * @param worker_filter
    * @example
    *  client = await createSelasClient(
    *  {
@@ -153,7 +156,13 @@ export class SelasClient {
    *  { branch: "main" }
    *);
    */
-  constructor(supabase: SupabaseClient, app_id: string, key: string, secret: string, worker_filter?: WorkerFilter) {
+  constructor(
+    supabase: SupabaseClient,
+    app_id: string,
+    key: string,
+    secret: string,
+    worker_filter?: WorkerFilter
+  ) {
     this.supabase = supabase;
     this.app_id = app_id;
     this.key = key;
@@ -164,34 +173,85 @@ export class SelasClient {
     this.add_ons = [];
   }
 
-  handle_error = (error: any) => {
-    if (error.code === '') {
-      throw new Error("The database cannot be reached. Contact the administrator.");
+  /**
+   * handle_error is a function to handle the errors returned by the Selas API.
+   * @param error - The error to handle.
+   * @example
+   * try {
+   *   await selas.rpc("test", {});
+   * } catch (error) {
+   *  this.handle_error(error);
+   * }
+   * @throws a typescript error
+   * @returns nothing
+   * @private
+   */
+  private handle_error = (error: any) => {
+    if (error.code === "") {
+      throw new Error(
+        "The database cannot be reached. Contact the administrator."
+      );
     }
-    if (error.message === "Invalid API key"){
+    if (error.message === "Invalid API key") {
       throw new Error("The API key is invalid. Contact the administrator.");
     }
-    if (error.code === '22P02'){
+    if (error.code === "22P02") {
       throw new Error("The credentials are not correct.");
     }
-    if (error.code === 'P0001'){
+    if (error.code === "P0001") {
       throw new Error(error.message);
     }
-  }
+  };
 
+  /**
+   * rpc is a wrapper around the supabase rpc function usable by the SelasClient.
+   * @param fn - The name of the function to call.
+   * @param params - The parameters to pass to the function.
+   * @returns the result of the rpc call.
+   * @example
+   * const { data, error } = await this.rpc("app_owner_echo", {message_app_owner: "hello"});
+   */
+  private rpc = async (fn: string, params: any) => {
+    const paramsWithSecret = {
+      ...params,
+      p_secret: this.secret,
+      p_app_id: this.app_id,
+      p_key: this.key,
+    };
+    const { data, error } = await this.supabase.rpc(fn, paramsWithSecret);
+
+    return { data, error };
+  };
+
+  /**
+   * test_connection is a function to test the connection to the database.
+   * @returns nothing
+   * @example
+   * await selas.test_connection();
+   * @throws a typescript error
+   */
   test_connection = async () => {
-    const { data, error } =  await this.rpc("app_user_echo", {message_app_user: "check"});
+    const { data, error } = await this.rpc("app_user_echo", {
+      message_app_user: "check",
+    });
     if (error) {
       this.handle_error(error);
     }
-    if (data){
+    if (data) {
       if (String(data) !== "check") {
-        throw new Error("There is a problem with the database. Contact the administrator.");
+        throw new Error(
+          "There is a problem with the database. Contact the administrator."
+        );
       }
     }
-  }
+  };
 
-    
+  /**
+   * getServiceList is a function to get the list of services available to this app.
+   * @returns the list of services.
+   * @example
+   * const services = await selas.getServiceList();
+   */
   getServiceList = async () => {
     const { data, error } = await this.rpc("app_owner_get_services", {});
     if (error) {
@@ -203,6 +263,12 @@ export class SelasClient {
     return data;
   };
 
+  /**
+   * getAddOnList is a function to get the list of add-ons available to this app.
+   * @returns the list of add-ons.
+   * @example
+   * const add_ons = await selas.getAddOnList();
+   */
   getAddOnList = async () => {
     const { data, error } = await this.rpc("app_owner_get_add_ons", {});
     if (error) {
@@ -215,27 +281,14 @@ export class SelasClient {
   };
 
   /**
-   * rpc is a wrapper around the supabase rpc function usable by the SelasClient.
-   * @param fn - The name of the function to call.
-   * @param params - The parameters to pass to the function.
-   * @returns the result of the rpc call.
-   * @example
-   * const { data, error } = await this.rpc("app_owner_echo", {message_app_owner: "hello"});
-   */
-  private rpc = async (fn: string, params: any) => {
-    const paramsWithSecret = { ...params, p_secret: this.secret, p_app_id: this.app_id, p_key: this.key };
-    const { data, error } = await this.supabase.rpc(fn, paramsWithSecret);
-
-    return { data, error };
-  };
-
-  /**
    * Send a message to the selas server and wait for the same message to be received.
    * @param message - The message to send.
    * @returns a text message which is the same as the input message.
    */
-  echo = async (args: {message: string}) => {
-    const {data, error} = await this.rpc("app_owner_echo", {message_app_owner: args.message});
+  echo = async (message: string) => {
+    const { data, error } = await this.rpc("app_owner_echo", {
+      message_app_owner: message,
+    });
     if (error) {
       this.handle_error(error);
     }
@@ -246,16 +299,25 @@ export class SelasClient {
    * Create a new user for the app. This user will have 0 credits. This user will not be able to post jobs without a token.
    * @returns the id of the new user.
    */
-  createAppUser = async (args: {external_id: string}) => {
-    const { data, error } = await this.rpc("app_owner_create_user", {p_external_id: args.external_id});
+  createAppUser = async (external_id: string) => {
+    const { data, error } = await this.rpc("app_owner_create_user", {
+      p_external_id: external_id,
+    });
     if (error) {
       this.handle_error(error);
     }
     return data;
   };
 
-  private getUserId = async (args: {external_id: string}) => {
-    const { data, error } = await this.rpc("app_owner_get_user_id", {p_app_user_external_id: args.external_id});
+  /**
+   * getUserId is a function to get the id of a user of the app, given its external id.
+   * @param external_id - the external id of the user.
+   * @returns the id of the user.
+   */
+  private getUserId = async (external_id: string) => {
+    const { data, error } = await this.rpc("app_owner_get_user_id", {
+      p_app_user_external_id: external_id,
+    });
     if (error) {
       this.handle_error(error);
     }
@@ -267,55 +329,11 @@ export class SelasClient {
    * @param app_user_id - the id of the user.
    * @returns a text that contains the token of the user.
    */
-  createToken = async (args: { app_user_external_id: string }) => {
-    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
-    const { data, error } = await this.rpc("app_owner_create_user_token", { p_app_user_id: app_user_id });
-    if (error) {
-      this.handle_error(error);
-    }
-    return data;
-  }
-
-  /**
-   * Get the token of a user of the app. This token allows the user to post jobs. The token can be deleted with the deactivateAppUser method.
-   * @param app_user_id - the id of a user.
-   * @returns a text that contains the token of the user.
-  */
-  getAppUserToken = async (args: { app_user_external_id: string }) => {
-    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
-    const { data, error } = await this.rpc("app_owner_get_user_token_value", { p_app_user_id: app_user_id });
-    if (error) {
-      this.handle_error(error);
-    }
-    return data;
-  };
-
-  /**
-   * Allows the app owner to add credits to a user of the app.
-   * @param app_user_id - the id of a user.
-   * @param amount - the amount of credits to add.
-   * @returns the new amount of credits of the user.
-   */
-  setCredit = async (args: { app_user_external_id: string; amount: number }) => {
-    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
-    const { data, error } = await this.rpc("app_owner_set_user_credits", {
-      p_amount: args.amount,
+  createToken = async (app_user_external_id: string) => {
+    let app_user_id = await this.getUserId(app_user_external_id);
+    const { data, error } = await this.rpc("app_owner_create_user_token", {
       p_app_user_id: app_user_id,
     });
-    if (error) {
-      this.handle_error(error);
-    }
-    return data;
-  };
-
-  /**
-   * Allows the app owner to get the credits of a user of the app.
-   * @param app_user_id - the id of a user.
-   * @returns the amount of credits of the user.
-   */
-  getAppUserCredits = async (args: { app_user_external_id: string }) => {
-    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
-    const { data, error } = await this.rpc("app_owner_get_user_credits", { p_app_user_id: app_user_id });
     if (error) {
       this.handle_error(error);
     }
@@ -327,9 +345,11 @@ export class SelasClient {
    * @param app_user_id - the id of a user.
    * @returns true if the token was deleted; false otherwise.
    */
-  deleteAllTokenOfAppUser = async (args: { app_user_external_id: string }) => {
-    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
-    var token = await this.rpc("app_owner_get_token", { p_app_user_id: app_user_id });
+  deleteAllTokenOfAppUser = async (app_user_external_id: string) => {
+    let app_user_id = await this.getUserId(app_user_external_id);
+    var token = await this.rpc("app_owner_get_token", {
+      p_app_user_id: app_user_id,
+    });
     if (token.error) {
       this.handle_error(token.error);
     }
@@ -343,13 +363,16 @@ export class SelasClient {
     return deleted.data;
   };
 
-  getServiceConfigCost = async (args: { service_name: string; job_config: object }) => {
-    const service_id = this.services.find(service => service.name === args.service_name)['id'];
-    if (!service_id) {
-      throw new Error("Invalid model name")
-    }    
-    const { data, error } = await this.supabase.rpc("get_service_config_cost_client", {p_service_id: service_id,
-                                                                                 p_config: JSON.stringify(args.job_config)});
+  /**
+   * Get the token of a user of the app. This token allows the user to post jobs. The token can be deleted with the deactivateAppUser method.
+   * @param app_user_id - the id of a user.
+   * @returns a text that contains the token of the user.
+   */
+  getAppUserToken = async (app_user_external_id: string) => {
+    let app_user_id = await this.getUserId(app_user_external_id);
+    const { data, error } = await this.rpc("app_owner_get_user_token_value", {
+      p_app_user_id: app_user_id,
+    });
     if (error) {
       this.handle_error(error);
     }
@@ -357,22 +380,32 @@ export class SelasClient {
   };
 
   /**
-   * Create a new job. This job will be executed by the workers of the app.
-   * @param service_id - the id of the service that will be executed.
-   * @param job_config - the configuration of the job.
-   * @returns the id of the job.
+   * Allows the app owner to add credits to a user of the app.
+   * @param app_user_id - the id of a user.
+   * @param amount - the amount of credits to add.
+   * @returns the new amount of credits of the user.
    */
-  postJob = async (args: { service_name: string; job_config: object}) => {
-    const service = this.services.find(service => service.name === args.service_name);
-    if (!service) {
-      throw new Error("Invalid model name")
+  setCredit = async (app_user_external_id: string, amount: number) => {
+    let app_user_id = await this.getUserId(app_user_external_id);
+    const { data, error } = await this.rpc("app_owner_set_user_credits", {
+      p_amount: amount,
+      p_app_user_id: app_user_id,
+    });
+    if (error) {
+      this.handle_error(error);
     }
+    return data;
+  };
 
-    
-    const { data, error } = await this.rpc("app_owner_post_job_admin", {
-      p_service_id: service["id"],
-      p_job_config: JSON.stringify(args.job_config),
-      p_worker_filter: this.worker_filter,
+  /**
+   * Allows the app owner to get the credits of a user of the app.
+   * @param app_user_id - the id of a user.
+   * @returns the amount of credits of the user.
+   */
+  getAppUserCredits = async (app_user_external_id: string) => {
+    let app_user_id = await this.getUserId(app_user_external_id);
+    const { data, error } = await this.rpc("app_owner_get_user_credits", {
+      p_app_user_id: app_user_id,
     });
     if (error) {
       this.handle_error(error);
@@ -389,12 +422,81 @@ export class SelasClient {
    * @example
    * client.getAppUserJobHistory({app_user_id: "1", p_limit: 10, p_offset: 0});
    */
-  getAppUserJobHistory = async (args: { app_user_external_id: string; p_limit: number; p_offset: number }) => {
-    let app_user_id = await this.getUserId({external_id: args.app_user_external_id});
+  getAppUserJobHistory = async (
+    app_user_external_id: string,
+    p_limit: number,
+    p_offset: number
+  ) => {
+    let app_user_id = await this.getUserId(app_user_external_id);
     const { data, error } = await this.rpc("app_owner_get_job_history_detail", {
       p_app_user_id: app_user_id,
-      p_limit: args.p_limit,
-      p_offset: args.p_offset
+      p_limit: p_limit,
+      p_offset: p_offset,
+    });
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
+  };
+
+  /**
+   * getServiceConfigCost returns the cost of a job configuration for a service.
+   * @param service_name
+   * @param job_config
+   * @returns the cost of the job configuration.
+   */
+  getServiceConfigCost = async (service_name: string, job_config: object) => {
+    const service_id = this.services.find(
+      (service) => service.name === service_name
+    )["id"];
+    if (!service_id) {
+      throw new Error("Invalid model name");
+    }
+    const { data, error } = await this.supabase.rpc(
+      "get_service_config_cost_client",
+      { p_service_id: service_id, p_config: JSON.stringify(job_config) }
+    );
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
+  };
+
+  /**
+   * Create a new job. This job will be executed by the workers of the app.
+   * @param service_id - the id of the service that will be executed.
+   * @param job_config - the configuration of the job.
+   * @returns the id of the job.
+   */
+  private postJob = async (service_name: string, job_config: object) => {
+    const service = this.services.find(
+      (service) => service.name === service_name
+    );
+    if (!service) {
+      throw new Error("Invalid model name");
+    }
+
+    const { data, error } = await this.rpc("app_owner_post_job_admin", {
+      p_service_id: service["id"],
+      p_job_config: JSON.stringify(job_config),
+      p_worker_filter: this.worker_filter,
+    });
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
+  };
+
+  /**
+   * Get the result of a job.
+   * @param job_id - the id of the job.
+   * @returns a json object containing the result of the job.
+   * @example
+   * const { data, error } = await selas.getResult({job_id: response.data});
+   */
+  getResult = async (job_id: string) => {
+    const { data, error } = await this.rpc("app_owner_get_result", {
+      p_job_id: job_id,
     });
     if (error) {
       this.handle_error(error);
@@ -409,54 +511,21 @@ export class SelasClient {
    * @example
    *  client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
    */
-  subscribeToJob = async (args: { job_id: string; callback: (result: object) => void }) => {
+  subscribeToJob = async (
+    job_id: string,
+    callback: (result: object) => void
+  ) => {
     const client = new Pusher("ed00ed3037c02a5fd912", {
       cluster: "eu",
     });
-    const channel = client.subscribe(`job-${args.job_id}`);
-    channel.bind("result", args.callback);
-  };
-
-  // method that change a PatchConfig into an addOnConfig
-  private patchConfigToAddonConfig = (patch_config: PatchConfig) => {
-    return {
-      id : this.add_ons.find(add_on => add_on.name === patch_config.name).id,
-      config : {
-        alpha_unet: patch_config.alpha_unet,
-        alpha_text_encoder: patch_config.alpha_text_encoder,
-        steps: patch_config.steps,
-      }
-    }
-  };
-
-  runPatchTrainer = async (dataset:TrainingImage[],patch_name: string,args?: {service_name?: string, description?: string, learning_rate?: number, steps?: number, rank?: number}) => {
-    const service_name = args?.service_name || "patch_trainer_v1";
-    // check if the model name has stable-diffusion as an interface
-    if (!this.services.find(service => service.name === service_name)) {
-      throw new Error(`The service ${service_name} does not exist`);
-    }
-    const service_interface = this.services.find(service => service.name === service_name).interface;
-    if (service_interface !== "train-patch-stable-diffusion") {
-      throw new Error(`The service ${service_name} does not have the train-patch-stable-diffusion interface`);
-    }
-
-    const trainerConfig: PatchTrainerConfig = {
-      dataset: dataset,
-      patch_name: patch_name,
-      description: args?.description || "",
-      learning_rate: args?.learning_rate || 1e-4,
-      steps: args?.steps || 1000,
-      rank: args?.rank || 4,
-    };
-
-    const response = await this.postJob({service_name: service_name, job_config: trainerConfig});
-    return response;
+    const channel = client.subscribe(`job-${job_id}`);
+    channel.bind("result", callback);
   };
 
   /**
    * Run a StableDiffusion job on Selas API. The job will be run on the first available worker.
    *
-   * @param args.prompt - the description of the image to be generated
+   * @param prompt - the description of the image to be generated
    * @param args.negative_prompt - description of the image to be generated, but with negative words like "ugly", "blurry" or "low quality"
    * @param args.width - the width of the generated image
    * @param args.height - the height of the generated image
@@ -471,37 +540,66 @@ export class SelasClient {
    * @param args.nsfw_filter - if true, the image will be filtered to remove NSFW content. It can be useful if you want to generate images for a public website.
    * @param args.translate_prompt - if true, the prompt will be translated to English before being used by the algorithm. It can be useful if you want to generate images in a language that is not English.
    **/
-  runStableDiffusion = async (prompt: string, args?: {service_name?: string, steps?: number, skip_steps?: number, 
-    batch_size?: 1 | 2 | 4 | 8 | 16, sampler?: "plms" | "ddim" | "k_lms" | "k_euler" | "k_euler_a" | "dpm_multistep", 
-    guidance_scale?: number, width?: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768, 
-    height?: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768, negative_prompt?: string, 
-    image_format?: "png" | "jpeg" | "avif" | "webp", translate_prompt?: boolean, nsfw_filter?: boolean,
-    patches?: PatchConfig[]}) => {
-
+  runStableDiffusion = async (
+    prompt: string,
+    args?: {
+      service_name?: string;
+      steps?: number;
+      skip_steps?: number;
+      batch_size?: 1 | 2 | 4 | 8 | 16;
+      sampler?:
+        | "plms"
+        | "ddim"
+        | "k_lms"
+        | "k_euler"
+        | "k_euler_a"
+        | "dpm_multistep";
+      guidance_scale?: number;
+      width?: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
+      height?: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
+      negative_prompt?: string;
+      image_format?: "png" | "jpeg" | "avif" | "webp";
+      translate_prompt?: boolean;
+      nsfw_filter?: boolean;
+      patches?: PatchConfig[];
+    }
+  ) => {
     const service_name = args?.service_name || "stable-diffusion-2-1-base";
     // check if the model name has stable-diffusion as an interface
-    if (!this.services.find(service => service.name === service_name)) {
+    if (!this.services.find((service) => service.name === service_name)) {
       throw new Error(`The service ${service_name} does not exist`);
     }
-    const service_interface = this.services.find(service => service.name === service_name).interface;
+    const service_interface = this.services.find(
+      (service) => service.name === service_name
+    ).interface;
     if (service_interface !== "stable-diffusion") {
-      throw new Error(`The service ${service_name} does not have the stable-diffusion interface`);
+      throw new Error(
+        `The service ${service_name} does not have the stable-diffusion interface`
+      );
     }
 
     // check if the add on is available for this service
     for (const patch of args?.patches || []) {
-      if (!this.add_ons.find(add_on => add_on.name === patch.name)) {
+      if (!this.add_ons.find((add_on) => add_on.name === patch.name)) {
         throw new Error(`The add-on ${patch.name} does not exist`);
       }
       //let service = this.add_ons.find(add_on => add_on.name === patch.name).service_name;
       //console.log(service);
-      if (!this.add_ons.find(add_on => add_on.name === patch.name).service_name.includes(service_name)) {
-        throw new Error(`The service ${service_name} does not have the add-on ${patch.name}`);
+      if (
+        !this.add_ons
+          .find((add_on) => add_on.name === patch.name)
+          .service_name.includes(service_name)
+      ) {
+        throw new Error(
+          `The service ${service_name} does not have the add-on ${patch.name}`
+        );
       }
     }
 
-    let add_ons = args?.patches?.map(patch => this.patchConfigToAddonConfig(patch));
-    
+    let add_ons = args?.patches?.map((patch) =>
+      this.patchConfigToAddonConfig(patch)
+    );
+
     const config: StableDiffusionConfig = {
       steps: args?.steps || 28,
       skip_steps: args?.skip_steps || 0,
@@ -515,32 +613,188 @@ export class SelasClient {
       image_format: args?.image_format || "jpeg",
       translate_prompt: args?.translate_prompt || false,
       nsfw_filter: args?.nsfw_filter || false,
-      add_ons : add_ons
+      add_ons: add_ons,
     };
-    const response = await this.postJob({
-      service_name: service_name,
-      job_config: config,
-    });
+    const response = await this.postJob(service_name, config);
     return response;
   };
 
-  //return the number of active worker
-  getCountActiveWorker = async () => {
-    const { data, error } = await this.supabase.rpc("get_active_worker_count", {p_worker_filter: this.worker_filter});
+  /**
+   * patchConfigToAddonConfig - convert a patch config to the correct format for the add-on config
+   * @param patch_config - the patch config
+   * @returns the add-on config
+   * @private
+   */
+  private patchConfigToAddonConfig = (patch_config: PatchConfig) => {
+    return {
+      id: this.add_ons.find((add_on) => add_on.name === patch_config.name).id,
+      config: {
+        alpha_unet: patch_config.alpha_unet,
+        alpha_text_encoder: patch_config.alpha_text_encoder,
+        steps: patch_config.steps,
+      },
+    };
+  };
+
+  /**
+   * runPatchTrainer - train a patch
+   * @param dataset - the dataset to train the patch
+   * @param patch_name - the name of the patch
+   * @param args.service_name - the name of the service on which the patch will be trained
+   * @param args.description - the description of the patch
+   * @param args.learning_rate - the learning rate
+   * @param args.steps - the number of steps to train the patch
+   * @param args.rank - the rank of the patch
+   * @returns a json object with the id and the cost of the job
+   */
+  runPatchTrainer = async (
+    dataset: TrainingImage[],
+    patch_name: string,
+    args?: {
+      service_name?: string;
+      description?: string;
+      learning_rate?: number;
+      steps?: number;
+      rank?: number;
+    }
+  ) => {
+    const service_name = args?.service_name || "patch_trainer_v1";
+    // check if the model name has stable-diffusion as an interface
+    if (!this.services.find((service) => service.name === service_name)) {
+      throw new Error(`The service ${service_name} does not exist`);
+    }
+    const service_interface = this.services.find(
+      (service) => service.name === service_name
+    ).interface;
+    if (service_interface !== "train-patch-stable-diffusion") {
+      throw new Error(
+        `The service ${service_name} does not have the train-patch-stable-diffusion interface`
+      );
+    }
+
+    await this.getAddOnList();
+
+    // check if the patch name is already in add_ons
+    if (this.add_ons.find((add_on) => add_on.name === patch_name)) {
+      throw new Error(`The add-on ${patch_name} already exists`);
+    }
+
+    let is_creating = await this.rpc("app_owner_is_creating_add_on", {
+      p_add_on_name: patch_name,
+    });
+    if (is_creating.data) {
+      throw new Error(`There is already an ${patch_name} add-on being created`);
+    }
+
+    const trainerConfig: PatchTrainerConfig = {
+      dataset: dataset,
+      patch_name: patch_name,
+      description: args?.description || "",
+      learning_rate: args?.learning_rate || 1e-4,
+      steps: args?.steps || 100,
+      rank: args?.rank || 4,
+    };
+
+    const response = await this.postJob(service_name, trainerConfig);
+    return response;
+  };
+
+  /**
+   * shareAddOn - share an add-on with another user of the same application
+   * @param add_on_name - the name of the add-on to share
+   * @param app_user_external_id - the external id of the user to share the add-on with
+   */
+  shareAddOn = async (add_on_name: string, app_user_external_id: string) => {
+    await this.getAddOnList();
+    const my_add_on = this.add_ons.find(
+      (add_on) => add_on.name === add_on_name
+    );
+
+    if (!my_add_on) {
+      throw new Error(`The add-on ${add_on_name} does not exist`);
+    }
+
+    const { data, error } = await this.rpc("app_owner_share_add_on", {
+      p_add_on_id: my_add_on.id,
+      p_app_user_external_id: app_user_external_id,
+    });
     if (error) {
       this.handle_error(error);
     }
     return data;
   };
 
-  //return the results of a job
-  getResult = async (job_id: string) => {
-    const { data, error } = await this.rpc("app_owner_get_result", {p_job_id: job_id});
+  /**
+   * deleteAddOn - delete an add-on that belongs to the application
+   * @param add_on_name - the name of the add-on to delete
+   * @returns true if the add-on was deleted
+   * @throws an error if not
+   */
+  deleteAddOn = async (add_on_name: string) => {
+    const my_add_on = this.add_ons.find(
+      (add_on) => add_on.name === add_on_name
+    );
+
+    if (!my_add_on) {
+      throw new Error(`The add-on ${add_on_name} does not exist`);
+    }
+
+    const { data, error } = await this.rpc("app_owner_delete_add_on", {
+      p_add_on_id: my_add_on.id,
+    });
+
+    if (error) {
+      this.handle_error(error);
+    }
+
+    return data;
+  };
+
+  /**
+   * renameAddOn - rename an add-on that belongs to the application
+   * @param add_on_name 
+   * @param new_add_on_name 
+   * @returns true if the add-on was renamed
+   */
+  renameAddOn = async (add_on_name: string, new_add_on_name: string) => {
+    const my_add_on = this.add_ons.find(
+      (add_on) => add_on.name === add_on_name
+    );
+
+    if (!my_add_on) {
+      throw new Error(`The add-on ${add_on_name} does not exist`);
+    }
+
+    const { data, error } = await this.rpc("app_owner_rename_add_on", {
+      p_add_on_id: my_add_on.id,
+      p_new_name: new_add_on_name,
+    });
+
+    await this.getAddOnList();
+
+    if (error) {
+      this.handle_error(error);
+    }
+
+    return data;
+  };
+
+  /**
+   * getCountActiveWorker returns the number of active workers, depending on the worker_filter used.
+   * @returns the number of active workers.
+   * @example
+   * const count = await selas.getCountActiveWorker();
+   * console.log(count);
+   */
+  getCountActiveWorker = async () => {
+    const { data, error } = await this.supabase.rpc("get_active_worker_count", {
+      p_worker_filter: this.worker_filter,
+    });
     if (error) {
       this.handle_error(error);
     }
     return data;
-  }
+  };
 }
 
 /**
@@ -567,20 +821,22 @@ export const createSelasClient = async (
   const SUPABASE_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxnd3JzZWZ5bmN1YnZwaG9sdG1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Njk0MDE0MzYsImV4cCI6MTk4NDk3NzQzNn0.o-QO3JKyJ5E-XzWRPC9WdWHY8WjzEFRRnDRSflLzHsc";
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true } });
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: true },
+  });
 
-  const selas =  new SelasClient(
-    supabase, 
-    credentials.app_id, 
-    credentials.key, 
-    credentials.secret, 
-    worker_filter);
+  const selas = new SelasClient(
+    supabase,
+    credentials.app_id,
+    credentials.key,
+    credentials.secret,
+    worker_filter
+  );
 
   await selas.test_connection();
 
   await selas.getServiceList();
   await selas.getAddOnList();
 
-  return selas; 
-
+  return selas;
 };
