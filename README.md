@@ -119,6 +119,14 @@ The following example shows how to run a stable diffusion job with minimal param
 const response = await client.runStableDiffusion("a cute cat");
 ```
 
+To get the cost of a job without running it, you can use the costStableDiffusion method. Its syntax is exactly the same as runStableDiffusion.
+
+```js
+const cost = await client.costStableDiffusion("a cute cat");
+```
+
+```js
+
 It is possible to specify additional parameters for the jobs. Those parameters are defined in this list :
 ```js
 /**
@@ -215,6 +223,12 @@ The following example shows how to run a patch creation job with minimal paramet
     ];
     const data = await selas.runPatchTrainer(dataset, "f-compo style");
     expect(data).toBeDefined();
+```
+
+To get the cost of a job without posting it, you can use the costPatchTrainer method. Its syntax is the same as the runPatchTrainer method.
+
+```js
+const data = await selas.costPatchTrainer(dataset, "f-compo style");
 ```
 
 To train a patch, you need a list of images and label that will be used to train the patch. They will alter the stable diffusion model to generate images that are similar to the images you provide. The label is used to describe the images you provide. It can be a sentence or a list of words.

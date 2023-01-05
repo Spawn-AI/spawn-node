@@ -447,29 +447,6 @@ export class SelasClient {
   };
 
   /**
-   * getServiceConfigCost returns the cost of a job configuration for a service.
-   * @param service_name
-   * @param job_config
-   * @returns the cost of the job configuration.
-   */
-  getServiceConfigCost = async (service_name: string, job_config: object) => {
-    const service_id = this.services.find(
-      (service) => service.name === service_name
-    )["id"];
-    if (!service_id) {
-      throw new Error("Invalid model name");
-    }
-    const { data, error } = await this.supabase.rpc(
-      "get_service_config_cost_client",
-      { p_service_id: service_id, p_config: JSON.stringify(job_config) }
-    );
-    if (error) {
-      this.handle_error(error);
-    }
-    return data;
-  };
-
-  /**
    * Create a new job. This job will be executed by the workers of the app.
    * @param service_id - the id of the service that will be executed.
    * @param job_config - the configuration of the job.
@@ -526,6 +503,118 @@ export class SelasClient {
     const channel = client.subscribe(`job-${job_id}`);
     channel.bind("result", callback);
   };
+
+  /**
+   * Get the cost a StableDiffusion job on Selas API.
+   *
+   * @param prompt - the description of the image to be generated
+   * @param args.negative_prompt - description of the image to be generated, but with negative words like "ugly", "blurry" or "low quality"
+   * @param args.width - the width of the generated image
+   * @param args.height - the height of the generated image
+   * @param args.steps - the number of steps of the StableDiffusion algorithm. The higher the number, the more detailed the image will be. Generally, 30 steps is enough, but you can try more if you want.
+   * @param args.batch_size - the number of images to be generated at each step.
+   * @param args.guidance_scale - the weight of the guidance image in the loss function. Typical values are between 5. and 15. The higher the number, the more the image will look like the prompt. If you go too high, the image will look like the prompt but will be low quality.
+   * @param args.init_image - the url of an initial image to be used by the algorithm. If not provided, random noise will be used. You can start from an existing image and make StableDiffusion refine it. You can specify the skip_steps to choose how much of the image will be refined (0 is like a random initialization, 1. is like a copy of the image).
+   * @param args.mask - the url of a mask image. The mask image must be a black and white image where white pixels are the pixels that will be modified by the algorithm. Black pixels will be kept as they are. If not provided, the whole image will be modified.
+   * @param args.skip_steps - the number of steps to skip at the beginning of the algorithm. If you provide an init_image, you can choose how much of the image will be refined. 0 is like a random initialization, 1. is like a copy of the image.
+   * @param args.seed - the seed of the random number generator. Using twice the same we generate the same image. It can be useful to see the effect of parameters on the image generated. If not provided, a random seed will be used.
+   * @param args.image_format - the format of the generated image. It can be "png" or "jpeg".
+   * @param args.nsfw_filter - if true, the image will be filtered to remove NSFW content. It can be useful if you want to generate images for a public website.
+   * @param args.translate_prompt - if true, the prompt will be translated to English before being used by the algorithm. It can be useful if you want to generate images in a language that is not English.
+   **/  
+  costStableDiffusion = async (
+    prompt: string,
+    args?: {
+      service_name?: string;
+      steps?: number;
+      skip_steps?: number;
+      batch_size?: 1 | 2 | 4 | 8 | 16;
+      sampler?:
+        | "plms"
+        | "ddim"
+        | "k_lms"
+        | "k_euler"
+        | "k_euler_a"
+        | "dpm_multistep";
+      guidance_scale?: number;
+      width?: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
+      height?: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
+      negative_prompt?: string;
+      image_format?: "png" | "jpeg" | "avif" | "webp";
+      translate_prompt?: boolean;
+      nsfw_filter?: boolean;
+      patches?: PatchConfig[];
+    }
+  ) => {
+    const service_name = args?.service_name || "stable-diffusion-2-1-base";
+    // check if the model name has stable-diffusion as an interface
+    if (!this.services.find((service) => service.name === service_name)) {
+      throw new Error(`The service ${service_name} does not exist`);
+    }
+    const service_interface = this.services.find(
+      (service) => service.name === service_name
+    ).interface;
+    if (service_interface !== "stable-diffusion") {
+      throw new Error(
+        `The service ${service_name} does not have the stable-diffusion interface`
+      );
+    }
+
+    // check if the add on is available for this service
+    for (const patch of args?.patches || []) {
+      if (!this.add_ons.find((add_on) => add_on.name === patch.name)) {
+        throw new Error(`The add-on ${patch.name} does not exist`);
+      }
+      //let service = this.add_ons.find(add_on => add_on.name === patch.name).service_name;
+      //console.log(service);
+      if (
+        !this.add_ons
+          .find((add_on) => add_on.name === patch.name)
+          .service_name.includes(service_name)
+      ) {
+        throw new Error(
+          `The service ${service_name} does not have the add-on ${patch.name}`
+        );
+      }
+    }
+
+    let add_ons = args?.patches?.map((patch) =>
+      this.patchConfigToAddonConfig(patch)
+    );
+
+    const config: StableDiffusionConfig = {
+      steps: args?.steps || 28,
+      skip_steps: args?.skip_steps || 0,
+      batch_size: args?.batch_size || 1,
+      sampler: args?.sampler || "k_euler",
+      guidance_scale: args?.guidance_scale || 10,
+      width: args?.width || 512,
+      height: args?.height || 512,
+      prompt: prompt || "banana in the kitchen",
+      negative_prompt: args?.negative_prompt || "ugly",
+      image_format: args?.image_format || "jpeg",
+      translate_prompt: args?.translate_prompt || false,
+      nsfw_filter: args?.nsfw_filter || false,
+      add_ons: add_ons,
+    };
+
+    const service = this.services.find(
+      (service) => service.name === service_name
+    );
+    if (!service) {
+      throw new Error("Invalid model name");
+    }
+
+    const { data, error } = await this.supabase.rpc(
+      "get_service_config_cost_client",
+      { p_service_id: service['id'], p_config: JSON.stringify(config) }
+    );
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
+  };
+
   /**
    * Run a StableDiffusion job on Selas API. The job will be run on the first available worker.
    *
@@ -638,6 +727,82 @@ export class SelasClient {
         steps: patch_config.steps,
       },
     };
+  };
+
+  /**
+   * runPatchTrainer - train a patch
+   * @param dataset - the dataset to train the patch
+   * @param patch_name - the name of the patch
+   * @param args.service_name - the name of the service on which the patch will be trained
+   * @param args.description - the description of the patch
+   * @param args.learning_rate - the learning rate
+   * @param args.steps - the number of steps to train the patch
+   * @param args.rank - the rank of the patch
+   * @returns a json object with the id and the cost of the job
+   */
+  costPatchTrainer = async (
+    dataset: TrainingImage[],
+    patch_name: string,
+    args?: {
+      service_name?: string;
+      description?: string;
+      learning_rate?: number;
+      steps?: number;
+      rank?: number;
+    }
+  ) => {
+    const service_name = args?.service_name || "patch_trainer_v1";
+    // check if the model name has stable-diffusion as an interface
+    if (!this.services.find((service) => service.name === service_name)) {
+      throw new Error(`The service ${service_name} does not exist`);
+    }
+    const service_interface = this.services.find(
+      (service) => service.name === service_name
+    ).interface;
+    if (service_interface !== "train-patch-stable-diffusion") {
+      throw new Error(
+        `The service ${service_name} does not have the train-patch-stable-diffusion interface`
+      );
+    }
+
+    await this.getAddOnList();
+
+    // check if the patch name is already in add_ons
+    if (this.add_ons.find((add_on) => add_on.name === patch_name)) {
+      throw new Error(`The add-on ${patch_name} already exists`);
+    }
+
+    let is_creating = await this.rpc("app_owner_is_creating_add_on", {
+      p_add_on_name: patch_name,
+    });
+    if (is_creating.data) {
+      throw new Error(`There is already an ${patch_name} add-on being created`);
+    }
+
+    const trainerConfig: PatchTrainerConfig = {
+      dataset: dataset,
+      patch_name: patch_name,
+      description: args?.description || "",
+      learning_rate: args?.learning_rate || 1e-4,
+      steps: args?.steps || 100,
+      rank: args?.rank || 4,
+    };
+
+    const service = this.services.find(
+      (service) => service.name === service_name
+    );
+    if (!service) {
+      throw new Error("Invalid model name");
+    }
+
+    const { data, error } = await this.supabase.rpc(
+      "get_service_config_cost_client",
+      { p_service_id: service['id'], p_config: JSON.stringify(trainerConfig) }
+    );
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
   };
 
   /**
