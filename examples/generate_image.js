@@ -23,12 +23,7 @@ const generateImage = async () => {
   console.log(response);
 
   if (response) {
-    await client.subscribeToJob({
-      job_id: response["job_id"],
-      callback: function (data) {
-        console.log(data);
-      },
-    });
+    await client.subscribeToJob(response["job_id"],function (data) {console.log(data);});
   } else {
     console.log(response.error);
   }
