@@ -39,7 +39,7 @@ describe("testing selas-node", () => {
       { branch: "main" }
     );
 
-    const data = await selas.createAppUser("Jacques Binouze");
+    const data = await selas.createAppUser("Pierre Binouze");
     expect(data).toBeDefined();
 
     let credit = await selas.setCredit(user,100);

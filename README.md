@@ -31,6 +31,14 @@ const client = await selas.createSelasClient(
 );
 ```
 
+### Administration of the users
+
+```js
+const data = await selas.createAppUser("Jacques Binouze");
+```
+
+### Usage of IA services
+
 The Selas client object has methods for running jobs on the Selas platform. The following example shows how to run a stable diffusion job:
 
 ```js

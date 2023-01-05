@@ -201,6 +201,13 @@ export class SelasClient {
     if (error.code === "P0001") {
       throw new Error(error.message);
     }
+    if (error.code === "23505") {
+      throw new Error("This object already exists.");
+    }
+    else
+      throw new Error(
+        "An unexpected error occured. Contact the administrator. " + error.message
+      );
   };
 
   /**
@@ -231,8 +238,8 @@ export class SelasClient {
    * @throws a typescript error
    */
   test_connection = async () => {
-    const { data, error } = await this.rpc("app_user_echo", {
-      message_app_user: "check",
+    const { data, error } = await this.rpc("app_owner_echo", {
+      message_app_owner: "check",
     });
     if (error) {
       this.handle_error(error);
