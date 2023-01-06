@@ -194,7 +194,7 @@ describe("testing selas-node", () => {
           "fcompo style, a drawing of a woman holding a baseball bat, inspired by Kusumi Morikage, pixiv, shin hanga, fully clothed. painting of sexy, あかさたなは on twitter, pin on anime, initial d",
       },
     ];
-    const data = await selas.runPatchTrainer(dataset, "f-crampoute6");
+    const data = await selas.runPatchTrainer(dataset, "f-crampoute7");
     expect(data).toBeDefined();
   });
 

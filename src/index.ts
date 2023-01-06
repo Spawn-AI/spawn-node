@@ -203,10 +203,10 @@ export class SelasClient {
     }
     if (error.code === "23505") {
       throw new Error("This object already exists.");
-    }
-    else
+    } else
       throw new Error(
-        "An unexpected error occured. Contact the administrator. " + error.message
+        "An unexpected error occured. Contact the administrator. " +
+          error.message
       );
   };
 
@@ -495,7 +495,10 @@ export class SelasClient {
    * @example
    *  client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
    */
-  subscribeToJob = async (job_id: string, callback: (result: object) => void ) => {
+  subscribeToJob = async (
+    job_id: string,
+    callback: (result: object) => void
+  ) => {
     const client = new Pusher("ed00ed3037c02a5fd912", {
       cluster: "eu",
     });
@@ -521,7 +524,7 @@ export class SelasClient {
    * @param args.image_format - the format of the generated image. It can be "png" or "jpeg".
    * @param args.nsfw_filter - if true, the image will be filtered to remove NSFW content. It can be useful if you want to generate images for a public website.
    * @param args.translate_prompt - if true, the prompt will be translated to English before being used by the algorithm. It can be useful if you want to generate images in a language that is not English.
-   **/  
+   **/
   costStableDiffusion = async (
     prompt: string,
     args?: {
@@ -607,7 +610,7 @@ export class SelasClient {
 
     const { data, error } = await this.supabase.rpc(
       "get_service_config_cost_client",
-      { p_service_id: service['id'], p_config: JSON.stringify(config) }
+      { p_service_id: service["id"], p_config: JSON.stringify(config) }
     );
     if (error) {
       this.handle_error(error);
@@ -767,16 +770,9 @@ export class SelasClient {
 
     await this.getAddOnList();
 
-    // check if the patch name is already in add_ons
-    if (this.add_ons.find((add_on) => add_on.name === patch_name)) {
-      throw new Error(`The add-on ${patch_name} already exists`);
-    }
-
-    let is_creating = await this.rpc("app_owner_is_creating_add_on", {
-      p_add_on_name: patch_name,
-    });
-    if (is_creating.data) {
-      throw new Error(`There is already an ${patch_name} add-on being created`);
+    // check if the patch name is in add_ons
+    if (!this.add_ons.find((add_on) => add_on.name === patch_name)) {
+      throw new Error(`The add-on ${patch_name} does not exist`);
     }
 
     const trainerConfig: PatchTrainerConfig = {
@@ -797,7 +793,7 @@ export class SelasClient {
 
     const { data, error } = await this.supabase.rpc(
       "get_service_config_cost_client",
-      { p_service_id: service['id'], p_config: JSON.stringify(trainerConfig) }
+      { p_service_id: service["id"], p_config: JSON.stringify(trainerConfig) }
     );
     if (error) {
       this.handle_error(error);
@@ -921,8 +917,8 @@ export class SelasClient {
 
   /**
    * renameAddOn - rename an add-on that belongs to the application
-   * @param add_on_name 
-   * @param new_add_on_name 
+   * @param add_on_name
+   * @param new_add_on_name
    * @returns true if the add-on was renamed
    */
   renameAddOn = async (add_on_name: string, new_add_on_name: string) => {
