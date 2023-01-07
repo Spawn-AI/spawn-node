@@ -1,6 +1,6 @@
 {
   "name": "@selas/selas-node",
-  "version": "0.2.0-beta.0",
+  "version": "0.2.0",
   "description": "Client for the Selas API using NodeJS",
   "packageManager": "pnpm@7.13.2",
   "engines": {
