@@ -502,6 +502,11 @@ export class SelasClient {
 
     const channel = client.subscribe(`job-${job_id}`);
     channel.bind("result", callback);
+    channel.bind("job-started", callback);
+    channel.bind("dataset-downloaded", callback);
+    channel.bind("training-started", callback);
+    channel.bind("training-progress", callback);
+    channel.bind("training-finished", callback);
   };
 
   /**
@@ -652,6 +657,7 @@ export class SelasClient {
       height?: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
       negative_prompt?: string;
       image_format?: "png" | "jpeg" | "avif" | "webp";
+      seed?: number;
       translate_prompt?: boolean;
       nsfw_filter?: boolean;
       patches?: PatchConfig[];
@@ -707,6 +713,7 @@ export class SelasClient {
       translate_prompt: args?.translate_prompt || false,
       nsfw_filter: args?.nsfw_filter || false,
       add_ons: add_ons,
+      seed: args?.seed
     };
     const response = await this.postJob(service_name, config);
     return response;
