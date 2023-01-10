@@ -15,7 +15,7 @@ const generateImage = async () => {
   const response = await client.runStableDiffusion("warrior in red armor and an axe", {
     patches: [
       {
-        name: 'Skippy Jack/f-compote2',
+        name: 'Skippy Jack/f-boopboop',
         alpha_text_encoder: 0.5,
         alpha_unet: 0.5,
         steps: 1000,
@@ -25,7 +25,7 @@ const generateImage = async () => {
   console.log(response);
 
   if (response) {
-    await client.subscribeToJob(response["job_id"],function (data) {console.log(data);});
+    await client.subscribeToJob("68f26a24-9f4a-4dde-936a-6093fadaaf8c",function (data) {console.log(data);});
   } else {
     console.log(response.error);
   }

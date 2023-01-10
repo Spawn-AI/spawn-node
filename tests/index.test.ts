@@ -1,7 +1,6 @@
 import {
   createSelasClient,
-  SelasClient,
-  StableDiffusionConfig
+  SelasClient
 } from "../src/index";
 
 import * as dotenv from "dotenv";
@@ -19,8 +18,7 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
 
     expect(selas).toBeDefined();
@@ -35,8 +33,7 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
 
     const data = await selas.createAppUser("Pierre Binouze");
@@ -66,8 +63,7 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
     const data = await selas.getServiceList();
     expect(data).toBeDefined();
@@ -79,8 +75,7 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
     const data = await selas.getAddOnList();
     console.log(data);
@@ -93,18 +88,10 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
 
-    const data = await selas.runStableDiffusion("banana in a kitchen",{patches: [
-      {
-        name: 'Skippy Jack/f-compote2',
-        alpha_unet: 1,
-        alpha_text_encoder:1,
-        steps: 100
-      }
-    ]});
+    const data = await selas.runStableDiffusion("banana in a kitchen")
 
     job = String(data);
     expect(job).toBeDefined();
@@ -116,39 +103,9 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
     const data = await selas.getAppUserJobHistory(user,10, 0);
-    expect(data).toBeDefined();
-  });
-
-  test("Get a config's cost for a job", async () => {
-    selas = await createSelasClient(
-      {
-        app_id: process.env.TEST_APP_ID!,
-        key: process.env.TEST_APP_KEY!,
-        secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
-    );
-
-    const config: StableDiffusionConfig = {
-      steps: 28,
-      skip_steps: 0,
-      batch_size: 1,
-      sampler: "k_euler",
-      guidance_scale: 10,
-      width: 512,
-      height: 512,
-      prompt: "banana in the kitchen",
-      negative_prompt: "ugly",
-      image_format: "jpeg",
-      translate_prompt: false,
-      nsfw_filter: false,
-    };
-
-    const data = await selas.getServiceConfigCost("stable-diffusion-1-5",config);
     expect(data).toBeDefined();
   });
 
@@ -158,8 +115,7 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
     const data = await selas.getCountActiveWorker();
     expect(data).toBeDefined();
@@ -171,8 +127,7 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
     let dataset = [
       {
@@ -194,7 +149,7 @@ describe("testing selas-node", () => {
           "fcompo style, a drawing of a woman holding a baseball bat, inspired by Kusumi Morikage, pixiv, shin hanga, fully clothed. painting of sexy, あかさたなは on twitter, pin on anime, initial d",
       },
     ];
-    const data = await selas.runPatchTrainer(dataset, "f-crampoute7");
+    const data = await selas.runPatchTrainer(dataset, "f-crampoute8");
     expect(data).toBeDefined();
   });
 
@@ -204,8 +159,7 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
     const data = await selas.getResult("c97ac10a-f647-4ab7-a531-9a8708df1c8d");
     expect(data).toBeDefined();
@@ -217,8 +171,7 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
     const data = await selas.shareAddOn("f-deca","Jacques");
     expect(data).toBeDefined();
@@ -230,8 +183,7 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
     const data = await selas.deleteAddOn("f-crampoute");
     expect(data).toBeDefined();
@@ -243,10 +195,9 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
-      },
-      { branch: "main" }
+      }
     );
-    const data = await selas.renameAddOn("Skippy Jack/f-boop","f-boopboop");
+    const data = await selas.renameAddOn("f-crampoute2","f-beepboop");
     expect(data).toBeDefined();
   });
 

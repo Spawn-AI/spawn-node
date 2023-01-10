@@ -302,6 +302,8 @@ export class SelasClient {
     return data;
   };
 
+  /***************  USER METHODS  ***************/
+
   /**
    * Create a new user for the app. This user will have 0 credits. This user will not be able to post jobs without a token.
    * @returns the id of the new user.
@@ -446,6 +448,103 @@ export class SelasClient {
     return data;
   };
 
+  /***************  ADD-ONS METHODS  ***************/
+
+  /**
+   * shareAddOn - share an add-on with another user of the same application
+   * @param add_on_name - the name of the add-on to share
+   * @param app_user_external_id - the external id of the user to share the add-on with
+   */
+  shareAddOn = async (add_on_name: string, app_user_external_id: string) => {
+    await this.getAddOnList();
+    const my_add_on = this.add_ons.find(
+      (add_on) => add_on.name === add_on_name
+    );
+
+    if (!my_add_on) {
+      throw new Error(`The add-on ${add_on_name} does not exist`);
+    }
+
+    const { data, error } = await this.rpc("app_owner_share_add_on", {
+      p_add_on_id: my_add_on.id,
+      p_app_user_external_id: app_user_external_id,
+    });
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
+  };
+
+  /**
+   * deleteAddOn - delete an add-on that belongs to the application
+   * @param add_on_name - the name of the add-on to delete
+   * @returns true if the add-on was deleted
+   * @throws an error if not
+   */
+  deleteAddOn = async (add_on_name: string) => {
+    const my_add_on = this.add_ons.find(
+      (add_on) => add_on.name === add_on_name
+    );
+
+    if (!my_add_on) {
+      throw new Error(`The add-on ${add_on_name} does not exist`);
+    }
+
+    const { data, error } = await this.rpc("app_owner_delete_add_on", {
+      p_add_on_id: my_add_on.id,
+    });
+
+    if (error) {
+      this.handle_error(error);
+    }
+
+    return data;
+  };
+
+  /**
+   * renameAddOn - rename an add-on that belongs to the application
+   * @param add_on_name
+   * @param new_add_on_name
+   * @returns true if the add-on was renamed
+   */
+  renameAddOn = async (add_on_name: string, new_add_on_name: string) => {
+    const my_add_on = this.add_ons.find(
+      (add_on) => add_on.name === add_on_name
+    );
+
+    if (!my_add_on) {
+      throw new Error(`The add-on ${add_on_name} does not exist`);
+    }
+
+    let can_rename = await this.rpc("app_owner_can_rename", {
+      p_add_on_id: my_add_on.id,
+      p_new_name: new_add_on_name,
+    });
+
+    if (can_rename.error) {
+      this.handle_error(can_rename.error);
+    }
+
+    if (!can_rename.data) {
+      throw new Error(`The name ${new_add_on_name} is not available`);
+    }
+
+    const { data, error } = await this.rpc("app_owner_rename_add_on", {
+      p_add_on_id: my_add_on.id,
+      p_new_name: new_add_on_name,
+    });
+
+    await this.getAddOnList();
+
+    if (error) {
+      this.handle_error(error);
+    }
+
+    return data;
+  };
+
+  /***************  JOB METHODS  ***************/
+
   /**
    * Create a new job. This job will be executed by the workers of the app.
    * @param service_id - the id of the service that will be executed.
@@ -469,42 +568,6 @@ export class SelasClient {
       this.handle_error(error);
     }
     return data;
-  };
-
-  /**
-   * Get the result of a job.
-   * @param job_id - the id of the job.
-   * @returns a json object containing the result of the job.
-   * @example
-   * const { data, error } = await selas.getResult({job_id: response.data});
-   */
-  getResult = async (job_id: string) => {
-    const { data, error } = await this.rpc("app_owner_get_result", {
-      p_job_id: job_id,
-    });
-    if (error) {
-      this.handle_error(error);
-    }
-    return data;
-  };
-
-  /**
-   * Wait for the  the result of a job and returns it.
-   * @param job_id - the id of the job.
-   * @callback - the function that will be used to process the result of the job.
-   * @example
-   *  client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
-   */
-  subscribeToJob = async (
-    job_id: string,
-    callback: (result: object) => void
-  ) => {
-    const client = new Pusher("ed00ed3037c02a5fd912", {
-      cluster: "eu",
-    });
-
-    const channel = client.subscribe(`job-${job_id}`);
-    channel.bind("result", callback);
   };
 
   /**
@@ -733,7 +796,7 @@ export class SelasClient {
   };
 
   /**
-   * runPatchTrainer - train a patch
+   * costPatchTrainer - Get the cost of a patch training job
    * @param dataset - the dataset to train the patch
    * @param patch_name - the name of the patch
    * @param args.service_name - the name of the service on which the patch will be trained
@@ -865,23 +928,15 @@ export class SelasClient {
   };
 
   /**
-   * shareAddOn - share an add-on with another user of the same application
-   * @param add_on_name - the name of the add-on to share
-   * @param app_user_external_id - the external id of the user to share the add-on with
+   * Get the result of a job.
+   * @param job_id - the id of the job.
+   * @returns a json object containing the result of the job.
+   * @example
+   * const { data, error } = await selas.getResult({job_id: response.data});
    */
-  shareAddOn = async (add_on_name: string, app_user_external_id: string) => {
-    await this.getAddOnList();
-    const my_add_on = this.add_ons.find(
-      (add_on) => add_on.name === add_on_name
-    );
-
-    if (!my_add_on) {
-      throw new Error(`The add-on ${add_on_name} does not exist`);
-    }
-
-    const { data, error } = await this.rpc("app_owner_share_add_on", {
-      p_add_on_id: my_add_on.id,
-      p_app_user_external_id: app_user_external_id,
+  getResult = async (job_id: string) => {
+    const { data, error } = await this.rpc("app_owner_get_result", {
+      p_job_id: job_id,
     });
     if (error) {
       this.handle_error(error);
@@ -890,58 +945,22 @@ export class SelasClient {
   };
 
   /**
-   * deleteAddOn - delete an add-on that belongs to the application
-   * @param add_on_name - the name of the add-on to delete
-   * @returns true if the add-on was deleted
-   * @throws an error if not
+   * Wait for the  the result of a job and returns it.
+   * @param job_id - the id of the job.
+   * @callback - the function that will be used to process the result of the job.
+   * @example
+   *  client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
    */
-  deleteAddOn = async (add_on_name: string) => {
-    const my_add_on = this.add_ons.find(
-      (add_on) => add_on.name === add_on_name
-    );
-
-    if (!my_add_on) {
-      throw new Error(`The add-on ${add_on_name} does not exist`);
-    }
-
-    const { data, error } = await this.rpc("app_owner_delete_add_on", {
-      p_add_on_id: my_add_on.id,
+  subscribeToJob = async (
+    job_id: string,
+    callback: (result: object) => void
+  ) => {
+    const client = new Pusher("ed00ed3037c02a5fd912", {
+      cluster: "eu",
     });
 
-    if (error) {
-      this.handle_error(error);
-    }
-
-    return data;
-  };
-
-  /**
-   * renameAddOn - rename an add-on that belongs to the application
-   * @param add_on_name
-   * @param new_add_on_name
-   * @returns true if the add-on was renamed
-   */
-  renameAddOn = async (add_on_name: string, new_add_on_name: string) => {
-    const my_add_on = this.add_ons.find(
-      (add_on) => add_on.name === add_on_name
-    );
-
-    if (!my_add_on) {
-      throw new Error(`The add-on ${add_on_name} does not exist`);
-    }
-
-    const { data, error } = await this.rpc("app_owner_rename_add_on", {
-      p_add_on_id: my_add_on.id,
-      p_new_name: new_add_on_name,
-    });
-
-    await this.getAddOnList();
-
-    if (error) {
-      this.handle_error(error);
-    }
-
-    return data;
+    const channel = client.subscribe(`job-${job_id}`);
+    channel.bind("result", callback);
   };
 
   /**
