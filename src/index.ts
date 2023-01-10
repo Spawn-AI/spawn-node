@@ -571,6 +571,44 @@ export class SelasClient {
   };
 
   /**
+   * Get the result of a job.
+   * @param job_id - the id of the job.
+   * @returns a json object containing the result of the job.
+   * @example
+   * const { data, error } = await selas.getResult({job_id: response.data});
+   */
+  getResult = async (job_id: string) => {
+    const { data, error } = await this.rpc("app_owner_get_result", {
+      p_job_id: job_id,
+    });
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
+  };
+
+  /**
+   * Wait for the  the result of a job and returns it.
+   * @param job_id - the id of the job.
+   * @callback - the function that will be used to process the result of the job.
+   * @example
+   *  client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
+   */
+  subscribeToJob = async (job_id: string, callback: (result: object) => void ) => {
+    const client = new Pusher("ed00ed3037c02a5fd912", {
+      cluster: "eu",
+    });
+
+    const channel = client.subscribe(`job-${job_id}`);
+    channel.bind("result", callback);
+    channel.bind("job-started", callback);
+    channel.bind("dataset-downloaded", callback);
+    channel.bind("training-started", callback);
+    channel.bind("training-progress", callback);
+    channel.bind("training-finished", callback);
+  };
+
+  /**
    * Get the cost a StableDiffusion job on Selas API.
    *
    * @param prompt - the description of the image to be generated
@@ -718,6 +756,7 @@ export class SelasClient {
       height?: 384 | 448 | 512 | 575 | 768 | 640 | 704 | 768;
       negative_prompt?: string;
       image_format?: "png" | "jpeg" | "avif" | "webp";
+      seed?: number;
       translate_prompt?: boolean;
       nsfw_filter?: boolean;
       patches?: PatchConfig[];
@@ -773,6 +812,7 @@ export class SelasClient {
       translate_prompt: args?.translate_prompt || false,
       nsfw_filter: args?.nsfw_filter || false,
       add_ons: add_ons,
+      seed: args?.seed
     };
     const response = await this.postJob(service_name, config);
     return response;
@@ -925,42 +965,6 @@ export class SelasClient {
 
     const response = await this.postJob(service_name, trainerConfig);
     return response;
-  };
-
-  /**
-   * Get the result of a job.
-   * @param job_id - the id of the job.
-   * @returns a json object containing the result of the job.
-   * @example
-   * const { data, error } = await selas.getResult({job_id: response.data});
-   */
-  getResult = async (job_id: string) => {
-    const { data, error } = await this.rpc("app_owner_get_result", {
-      p_job_id: job_id,
-    });
-    if (error) {
-      this.handle_error(error);
-    }
-    return data;
-  };
-
-  /**
-   * Wait for the  the result of a job and returns it.
-   * @param job_id - the id of the job.
-   * @callback - the function that will be used to process the result of the job.
-   * @example
-   *  client.subscribeToJob({job_id: response.data, callback: function (data) { console.log(data); }});
-   */
-  subscribeToJob = async (
-    job_id: string,
-    callback: (result: object) => void
-  ) => {
-    const client = new Pusher("ed00ed3037c02a5fd912", {
-      cluster: "eu",
-    });
-
-    const channel = client.subscribe(`job-${job_id}`);
-    channel.bind("result", callback);
   };
 
   /**
