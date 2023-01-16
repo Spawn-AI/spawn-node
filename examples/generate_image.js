@@ -8,11 +8,13 @@ const generateImage = async () => {
     secret: process.env.TEST_APP_SECRET,
   });
 
+
   console.log(await client.getCountActiveWorker());
+  console.log(await client.isUser("Bertrand"));
 
   console.log(await client.costStableDiffusion("warrior"))
 
-  const response = await client.runStableDiffusion("warrior in red armor and an axe", {
+  const response = await client.runStableDiffusion("ironman in a banana armor", {
     patches: [
       {
         name: 'Skippy Jack/f-boopboop',
@@ -22,10 +24,12 @@ const generateImage = async () => {
       },
     ],
   });
+
+
   console.log(response);
 
   if (response) {
-    await client.subscribeToJob("68f26a24-9f4a-4dde-936a-6093fadaaf8c",function (data) {console.log(data);});
+    await client.subscribeToJob(response['job_id'],function (data) {console.log(data);});
   } else {
     console.log(response.error);
   }

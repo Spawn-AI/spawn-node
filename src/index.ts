@@ -334,6 +334,22 @@ export class SelasClient {
   };
 
   /**
+   * isUser is a function to check if a user of the app exists, given its external id.
+   * @param external_id 
+   * @returns true if the user exists, false otherwise.
+   */
+  isUser = async (external_id: string) => {
+    let app_user_id = await this.getUserId(external_id);
+    const { data, error } = await this.rpc("app_owner_is_user", {
+      p_app_user_id: app_user_id,
+    });
+    if (error) {
+      this.handle_error(error);
+    }
+    return data;
+  };
+
+  /**
    * Create a token for a user of the app. This token allows the user to post jobs. The token can be deleted with the deactivateAppUser method.
    * @param app_user_id - the id of the user.
    * @returns a text that contains the token of the user.
@@ -600,7 +616,10 @@ export class SelasClient {
     });
 
     const channel = client.subscribe(`job-${job_id}`);
+
+    console.log(`job-${job_id}`);
     channel.bind("result", callback);
+    console.log('we resulted');
     channel.bind("job-started", callback);
     channel.bind("dataset-downloaded", callback);
     channel.bind("training-started", callback);

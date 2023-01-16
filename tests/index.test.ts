@@ -105,7 +105,7 @@ describe("testing selas-node", () => {
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.getAppUserJobHistory(user,10, 0);
+    const data = await selas.getAppUserJobHistory("hello",10, 0);
     expect(data).toBeDefined();
   });
 
@@ -149,7 +149,7 @@ describe("testing selas-node", () => {
           "fcompo style, a drawing of a woman holding a baseball bat, inspired by Kusumi Morikage, pixiv, shin hanga, fully clothed. painting of sexy, あかさたなは on twitter, pin on anime, initial d",
       },
     ];
-    const data = await selas.runPatchTrainer(dataset, "f-crampoute8");
+    const data = await selas.runPatchTrainer(dataset, "f-crampoute10");
     expect(data).toBeDefined();
   });
 
