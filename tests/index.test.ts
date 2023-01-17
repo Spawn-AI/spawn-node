@@ -201,5 +201,29 @@ describe("testing selas-node", () => {
     expect(data).toBeDefined();
   });
 
+  test("Publish an add on", async () => {
+    selas = await createSelasClient(
+      {
+        app_id: process.env.TEST_APP_ID!,
+        key: process.env.TEST_APP_KEY!,
+        secret: process.env.TEST_APP_SECRET!,
+      }
+    );
+    const data = await selas.publishAddOn("f-crampoute8");
+    expect(data).toBeDefined();
+  });
+
+  test("Unpublish an add on", async () => {
+    selas = await createSelasClient(
+      {
+        app_id: process.env.TEST_APP_ID!,
+        key: process.env.TEST_APP_KEY!,
+        secret: process.env.TEST_APP_SECRET!,
+      }
+    );
+    const data = await selas.unpublishAddOn("f-crampoute8");
+    expect(data).toBeDefined();
+  });
+
 
 });

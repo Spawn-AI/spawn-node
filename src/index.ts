@@ -568,6 +568,61 @@ export class SelasClient {
     return data;
   };
 
+  /**
+   * publishAddOn - publish an add-on that belongs to the application
+   * @param add_on_name
+   * @returns true if the add-on was published
+   * @throws an error if not
+   * @example
+   * const is_published = client.publishAddOn("my_add_on");
+   */
+  publishAddOn = async (add_on_name: string) => {
+    const my_add_on = this.add_ons.find(
+      (add_on) => add_on.name === add_on_name
+    );
+
+    if (!my_add_on) {
+      throw new Error(`The add-on ${add_on_name} does not exist`);
+    }
+
+    const { data, error } = await this.rpc("app_owner_publish_add_on", {
+      p_add_on_id: my_add_on.id,
+    });
+
+    if (error) {
+      this.handle_error(error);
+    }
+
+    return data;
+  };
+
+  /**
+   * unpublishAddOn - unpublish an add-on that belongs to the application
+   * @param add_on_name
+   * @returns true if the add-on was unpublished
+   * @throws an error if not
+   * @example
+   * const is_unpublished = client.unpublishAddOn("my_add_on");
+   */
+  unpublishAddOn = async (add_on_name: string) => {
+    const my_add_on = this.add_ons.find(
+      (add_on) => add_on.name === add_on_name
+    );
+
+    if (!my_add_on) {
+      throw new Error(`The add-on ${add_on_name} does not exist`);
+    }
+
+    const { data, error } = await this.rpc("app_owner_unpublish_add_on", {
+      p_add_on_id: my_add_on.id,
+    });
+
+    if (error) {
+      this.handle_error(error);
+    }
+
+    return data;
+  };    
   /***************  JOB METHODS  ***************/
 
   /**
