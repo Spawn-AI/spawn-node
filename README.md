@@ -89,7 +89,7 @@ const image = await selas.getResult(job_id);
 
 As your user will be able to create add-ons, you will have a complete right to access them. All add-ons create by your customers and by you will be accessible by the getAddOnList method. It will return a json object with all the add-ons of your app.
 ```js
-const add_ons = await this.getAddOnList();
+const add_ons = this.getAddOnList();
 ```
 
 Moreover, you can delete, share or rename any add-on created on your application.

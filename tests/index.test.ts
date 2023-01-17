@@ -77,7 +77,7 @@ describe("testing selas-node", () => {
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.getAddOnList();
+    const data = selas.getAddOnList();
     console.log(data);
     expect(data).toBeDefined();
   });
