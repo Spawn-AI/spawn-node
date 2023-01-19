@@ -177,12 +177,10 @@ You can also subscribe to the job by calling the subscribeToJob method on the Se
 const response = await client.runStableDiffusion("a cute cat");
 
 if (response) {
-    await client.subscribeToJob({
-      job_id: response['job_id'],  
-      callback: function (data) {
-        console.log(data);
-      },
-    });
+    await client.subscribeToJob(
+      response['job_id'],
+      function (data) {console.log(data);}
+    );
 } else {
     console.log(response.error);
 }
