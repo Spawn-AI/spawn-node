@@ -679,16 +679,24 @@ export class SelasClient {
       cluster: "eu",
     });
 
+    client.connection.connectionCallbacks['close'] = (_:any) => {
+      //pass
+    };
+    
+
     const channel = client.subscribe(`job-${job_id}`);
 
-    console.log(`job-${job_id}`);
-    channel.bind("result", callback);
-    console.log('we resulted');
-    channel.bind("job-started", callback);
-    channel.bind("dataset-downloaded", callback);
-    channel.bind("training-started", callback);
-    channel.bind("training-progress", callback);
-    channel.bind("training-finished", callback);
+    const fn : (result: object) => void = function (data) {
+      console.log("It is a message")
+      callback(data);
+      if ("result" in data) {
+        console.log("Job finished");
+        client.unsubscribe(`job-${job_id}`);
+        client.disconnect();
+      }
+    };
+
+    channel.bind("result", fn);
   };
 
   /**
