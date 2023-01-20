@@ -18,6 +18,9 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
+      },
+      {
+        branch: "fix-the-add-on-downloading-paw-47"
       }
     );
 
