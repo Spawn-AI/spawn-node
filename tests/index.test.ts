@@ -91,6 +91,7 @@ describe("testing selas-node", () => {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
+        app_user_external_id: "Skippy Jack"
       }
     );
 

@@ -139,6 +139,9 @@ export class SelasClient {
   services: any[];
   add_ons: any[];
 
+  app_user_id: string;
+  app_user_token: string;
+
   /**
    * constructor creates a new SelasClient.
    * @param supabase
@@ -171,6 +174,9 @@ export class SelasClient {
 
     this.services = [];
     this.add_ons = [];
+
+    this.app_user_id = "";
+    this.app_user_token = "";
   }
 
   /**
@@ -178,7 +184,7 @@ export class SelasClient {
    * @param error - The error to handle.
    * @example
    * try {
-   *   await selas.rpc("test", {});
+   *   await selas.owner_rpc("test", {});
    * } catch (error) {
    *  this.handle_error(error);
    * }
@@ -211,14 +217,14 @@ export class SelasClient {
   };
 
   /**
-   * rpc is a wrapper around the supabase rpc function usable by the SelasClient.
+   * owner_rpc is a wrapper around the supabase owner_rpc function usable by the SelasClient.
    * @param fn - The name of the function to call.
    * @param params - The parameters to pass to the function.
-   * @returns the result of the rpc call.
+   * @returns the result of the owner_rpc call.
    * @example
-   * const { data, error } = await this.rpc("app_owner_echo", {message_app_owner: "hello"});
+   * const { data, error } = await this.owner_rpc("app_owner_echo", {message_app_owner: "hello"});
    */
-  private rpc = async (fn: string, params: any) => {
+  private owner_rpc = async (fn: string, params: any) => {
     const paramsWithSecret = {
       ...params,
       p_secret: this.secret,
@@ -231,6 +237,44 @@ export class SelasClient {
   };
 
   /**
+   * rpc is a wrapper around the supabase rpc function usable by the SelasClient.
+   * @param fn - The name of the function to call.
+   * @param params - The parameters to pass to the function.
+   * @returns the result of the rpc call.
+   * @example
+   * const { data, error } = await this.rpc("app_user_echo", {message_app_owner: "hello"});
+   */
+  private user_rpc = async (fn: string, params: any) => {
+    const paramsWithToken = {
+      ...params,
+      p_app_id: this.app_id,
+      p_key: this.key,
+      p_app_user_id: this.app_user_id,
+      p_app_user_token: this.app_user_token,
+    };
+    const { data, error } = await this.supabase.rpc(fn, paramsWithToken);
+
+    return { data, error };
+  };
+
+  /**
+   * setUserID fetch the app_user_id from the database, given by the app_user_external_id and the app_user_token set in the constructor.
+   * @returns nothing
+   * @example
+   * await this.setUserID();
+   */
+    setUserID = async (app_user_external_id: string) => {
+      const { data, error } = await this.owner_rpc("app_owner_get_user_id", {p_app_user_external_id: app_user_external_id});
+      if (error) {
+        throw new Error(error.message);
+      }
+      if (data) {
+        this.app_user_id = String(data);
+        this.app_user_token = String(await this.getAppUserToken(app_user_external_id));
+      }
+    };
+
+  /**
    * test_connection is a function to test the connection to the database.
    * @returns nothing
    * @example
@@ -238,7 +282,7 @@ export class SelasClient {
    * @throws a typescript error
    */
   test_connection = async () => {
-    const { data, error } = await this.rpc("app_owner_echo", {
+    const { data, error } = await this.owner_rpc("app_owner_echo", {
       message_app_owner: "check",
     });
     if (error) {
@@ -260,7 +304,12 @@ export class SelasClient {
    * const services = await selas.getServiceList();
    */
   getServiceList = async () => {
-    const { data, error } = await this.rpc("app_owner_get_services", {});
+    var response;
+    if (this.app_user_id == "")
+      response = await this.owner_rpc("app_owner_get_services", {});
+    else
+      response = await this.user_rpc("app_user_get_services", {});
+    const { data, error } = response;
     if (error) {
       this.handle_error(error);
     }
@@ -277,7 +326,12 @@ export class SelasClient {
    * const add_ons = await selas.updateAddOnList();
    */
   updateAddOnList = async () => {
-    const { data, error } = await this.rpc("app_owner_get_add_ons", {});
+    var response;
+    if (this.app_user_id == "")
+      response = await this.owner_rpc("app_owner_get_add_ons", {});
+    else
+      response = await this.user_rpc("app_user_get_add_ons", {});
+    const { data, error } = response;
     if (error) {
       this.handle_error(error);
     }
@@ -302,7 +356,7 @@ export class SelasClient {
    * @returns a text message which is the same as the input message.
    */
   echo = async (message: string) => {
-    const { data, error } = await this.rpc("app_owner_echo", {
+    const { data, error } = await this.owner_rpc("app_owner_echo", {
       message_app_owner: message,
     });
     if (error) {
@@ -318,7 +372,7 @@ export class SelasClient {
    * @returns the id of the new user.
    */
   createAppUser = async (external_id: string) => {
-    const { data, error } = await this.rpc("app_owner_create_user", {
+    const { data, error } = await this.owner_rpc("app_owner_create_user", {
       p_external_id: external_id,
     });
     if (error) {
@@ -333,7 +387,7 @@ export class SelasClient {
    * @returns the id of the user.
    */
   private getUserId = async (external_id: string) => {
-    const { data, error } = await this.rpc("app_owner_get_user_id", {
+    const { data, error } = await this.owner_rpc("app_owner_get_user_id", {
       p_app_user_external_id: external_id,
     });
     if (error) {
@@ -349,7 +403,7 @@ export class SelasClient {
    */
   isUser = async (external_id: string) => {
     let app_user_id = await this.getUserId(external_id);
-    const { data, error } = await this.rpc("app_owner_is_user", {
+    const { data, error } = await this.owner_rpc("app_owner_is_user", {
       p_app_user_id: app_user_id,
     });
     if (error) {
@@ -365,7 +419,7 @@ export class SelasClient {
    */
   createToken = async (app_user_external_id: string) => {
     let app_user_id = await this.getUserId(app_user_external_id);
-    const { data, error } = await this.rpc("app_owner_create_user_token", {
+    const { data, error } = await this.owner_rpc("app_owner_create_user_token", {
       p_app_user_id: app_user_id,
     });
     if (error) {
@@ -381,13 +435,13 @@ export class SelasClient {
    */
   deleteAllTokenOfAppUser = async (app_user_external_id: string) => {
     let app_user_id = await this.getUserId(app_user_external_id);
-    var token = await this.rpc("app_owner_get_token", {
+    var token = await this.owner_rpc("app_owner_get_token", {
       p_app_user_id: app_user_id,
     });
     if (token.error) {
       this.handle_error(token.error);
     }
-    var deleted = await this.rpc("app_owner_revoke_user_token", {
+    var deleted = await this.owner_rpc("app_owner_revoke_user_token", {
       p_app_user_id: app_user_id,
       p_token: token.data,
     });
@@ -404,7 +458,7 @@ export class SelasClient {
    */
   getAppUserToken = async (app_user_external_id: string) => {
     let app_user_id = await this.getUserId(app_user_external_id);
-    const { data, error } = await this.rpc("app_owner_get_user_token_value", {
+    const { data, error } = await this.owner_rpc("app_owner_get_user_token_value", {
       p_app_user_id: app_user_id,
     });
     if (error) {
@@ -421,7 +475,7 @@ export class SelasClient {
    */
   setCredit = async (app_user_external_id: string, amount: number) => {
     let app_user_id = await this.getUserId(app_user_external_id);
-    const { data, error } = await this.rpc("app_owner_set_user_credits", {
+    const { data, error } = await this.owner_rpc("app_owner_set_user_credits", {
       p_amount: amount,
       p_app_user_id: app_user_id,
     });
@@ -438,7 +492,7 @@ export class SelasClient {
    */
   getAppUserCredits = async (app_user_external_id: string) => {
     let app_user_id = await this.getUserId(app_user_external_id);
-    const { data, error } = await this.rpc("app_owner_get_user_credits", {
+    const { data, error } = await this.owner_rpc("app_owner_get_user_credits", {
       p_app_user_id: app_user_id,
     });
     if (error) {
@@ -462,7 +516,7 @@ export class SelasClient {
     p_offset: number
   ) => {
     let app_user_id = await this.getUserId(app_user_external_id);
-    const { data, error } = await this.rpc("app_owner_get_job_history_detail", {
+    const { data, error } = await this.owner_rpc("app_owner_get_job_history_detail", {
       p_app_user_id: app_user_id,
       p_limit: p_limit,
       p_offset: p_offset,
@@ -490,7 +544,7 @@ export class SelasClient {
       throw new Error(`The add-on ${add_on_name} does not exist`);
     }
 
-    const { data, error } = await this.rpc("app_owner_share_add_on", {
+    const { data, error } = await this.owner_rpc("app_owner_share_add_on", {
       p_add_on_id: my_add_on.id,
       p_app_user_external_id: app_user_external_id,
     });
@@ -515,7 +569,7 @@ export class SelasClient {
       throw new Error(`The add-on ${add_on_name} does not exist`);
     }
 
-    const { data, error } = await this.rpc("app_owner_delete_add_on", {
+    const { data, error } = await this.owner_rpc("app_owner_delete_add_on", {
       p_add_on_id: my_add_on.id,
     });
 
@@ -541,7 +595,7 @@ export class SelasClient {
       throw new Error(`The add-on ${add_on_name} does not exist`);
     }
 
-    let can_rename = await this.rpc("app_owner_can_rename", {
+    let can_rename = await this.owner_rpc("app_owner_can_rename", {
       p_add_on_id: my_add_on.id,
       p_new_name: new_add_on_name,
     });
@@ -554,7 +608,7 @@ export class SelasClient {
       throw new Error(`The name ${new_add_on_name} is not available`);
     }
 
-    const { data, error } = await this.rpc("app_owner_rename_add_on", {
+    const { data, error } = await this.owner_rpc("app_owner_rename_add_on", {
       p_add_on_id: my_add_on.id,
       p_new_name: new_add_on_name,
     });
@@ -585,7 +639,7 @@ export class SelasClient {
       throw new Error(`The add-on ${add_on_name} does not exist`);
     }
 
-    const { data, error } = await this.rpc("app_owner_publish_add_on", {
+    const { data, error } = await this.owner_rpc("app_owner_publish_add_on", {
       p_add_on_id: my_add_on.id,
     });
 
@@ -613,7 +667,7 @@ export class SelasClient {
       throw new Error(`The add-on ${add_on_name} does not exist`);
     }
 
-    const { data, error } = await this.rpc("app_owner_unpublish_add_on", {
+    const { data, error } = await this.owner_rpc("app_owner_unpublish_add_on", {
       p_add_on_id: my_add_on.id,
     });
 
@@ -639,11 +693,21 @@ export class SelasClient {
       throw new Error("Invalid model name");
     }
 
-    const { data, error } = await this.rpc("app_owner_post_job_admin", {
-      p_service_id: service["id"],
-      p_job_config: JSON.stringify(job_config),
-      p_worker_filter: this.worker_filter,
-    });
+    var response;
+    if (this.app_user_id == "")
+      response = await this.owner_rpc("app_owner_post_job_admin", {
+        p_service_id: service["id"],
+        p_job_config: JSON.stringify(job_config),
+        p_worker_filter: this.worker_filter,
+      });
+    else
+      response = await this.user_rpc("post_job", {
+        p_service_id: service["id"],
+        p_job_config: JSON.stringify(job_config),
+        p_worker_filter: this.worker_filter,
+      });
+    const { data, error } = response;
+
     if (error) {
       this.handle_error(error);
     }
@@ -658,7 +722,7 @@ export class SelasClient {
    * const { data, error } = await selas.getResult({job_id: response.data});
    */
   getResult = async (job_id: string) => {
-    const { data, error } = await this.rpc("app_owner_get_result", {
+    const { data, error } = await this.owner_rpc("app_owner_get_result", {
       p_job_id: job_id,
     });
     if (error) {
@@ -1052,7 +1116,7 @@ export class SelasClient {
       throw new Error(`The add-on ${patch_name} already exists`);
     }
 
-    let is_creating = await this.rpc("app_owner_is_creating_add_on", {
+    let is_creating = await this.owner_rpc("app_owner_is_creating_add_on", {
       p_add_on_name: patch_name,
     });
     if (is_creating.data) {
@@ -1113,7 +1177,7 @@ export class SelasClient {
  *
  */
 export const createSelasClient = async (
-  credentials: { app_id: string; key: string; secret: string },
+  credentials: { app_id: string; key: string; secret: string, app_user_external_id?: string},
   worker_filter?: WorkerFilter
 ) => {
   const SUPABASE_URL = "https://lgwrsefyncubvpholtmh.supabase.co";
@@ -1134,6 +1198,9 @@ export const createSelasClient = async (
   );
 
   await selas.test_connection();
+
+  if (credentials.app_user_external_id)
+    await selas.setUserID(credentials.app_user_external_id);
 
   await selas.getServiceList();
   await selas.updateAddOnList();
