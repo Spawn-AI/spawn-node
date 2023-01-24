@@ -7,25 +7,16 @@ const generateImage = async () => {
     key: process.env.TEST_APP_KEY,
     secret: process.env.TEST_APP_SECRET,
     }
-  //,
-  // {
-  //   branch: "give-worker-rank-info-paw-62",
-  //   name : "Edwinette"
-  // }
   );
 
+  function fn(response) {
+    if ("result" in response) {
+      console.log(response.result[0].url);
+    }
+  }
 
+  await client.runStableDiffusion("ironman in a banana armor", {"callback" : fn});
 
-  const response = await client.runStableDiffusion("ironman in a banana armor", { batch_size: 4,
-    patches: [
-      {
-        name: 'f-crampoute16',
-        alpha_text_encoder: 0.5,
-        alpha_unet: 0.5,
-        steps: 1000,
-      },
-    ],
-  });
 
   // let dataset = [
   //   {

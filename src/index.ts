@@ -913,8 +913,8 @@ export class SelasClient {
       translate_prompt?: boolean;
       nsfw_filter?: boolean;
       patches?: PatchConfig[];
-    },
-    callback? : (result: Object) => void
+      callback? : (result: any) => void;
+    }
   ) => {
     const service_name = args?.service_name || "stable-diffusion-2-1-base";
     // check if the model name has stable-diffusion as an interface
@@ -928,10 +928,6 @@ export class SelasClient {
       throw new Error(
         `The service ${service_name} does not have the stable-diffusion interface`
       );
-    }
-
-    if (callback == null){
-      callback = function (data) {console.log(data);};
     }
 
     // check if the add on is available for this service
@@ -972,10 +968,11 @@ export class SelasClient {
       add_ons: add_ons,
       seed: args?.seed
     };
+    var current_callback = args?.callback || function (data) {console.log(data);};
     const response = await this.postJob(service_name, config);
     if (response){
       if ("job_id" in response){
-        const result = await this.subscribeToJob(String(response['job_id']),callback);
+        const result = await this.subscribeToJob(String(response['job_id']), current_callback );
         return result;
       }
     }
