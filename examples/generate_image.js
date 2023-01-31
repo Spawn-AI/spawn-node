@@ -9,13 +9,13 @@ const generateImage = async () => {
     }
   );
 
-  function fn(response) {
-    if ("result" in response) {
-      console.log(response.result[0].url);
-    }
-  }
+  // function fn(response) {
+  //   if ("result" in response) {
+  //     console.log(response.result[0].url);
+  //   }
+  // }
 
-  await client.runStableDiffusion("ironman in a banana armor", {batch_size:4, "callback" : fn});
+  // await client.runStableDiffusion("ironman in a banana armor", {batch_size:4, "callback" : fn});
 
 
   let dataset = [
@@ -38,7 +38,15 @@ const generateImage = async () => {
         "fcompo style, a drawing of a woman holding a baseball bat, inspired by Kusumi Morikage, pixiv, shin hanga, fully clothed. painting of sexy, あかさたなは on twitter, pin on anime, initial d",
     },
   ];
-  const response = await client.runPatchTrainer(dataset, "f-crampoute17");
+
+  function my_callback(feedback) {
+    if ("result" in feedback) {
+      console.log(feedback)
+      //return response.send(feedback.result);
+    }
+  }
+
+  await client.runPatchTrainer(dataset, "f-crampoute21", { "callback" : my_callback });
 
 
 

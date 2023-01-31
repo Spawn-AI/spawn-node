@@ -1078,9 +1078,8 @@ export class SelasClient {
       learning_rate?: number;
       steps?: number;
       rank?: number;
-    },
-    callback? : (result: Object) => void
-  ) => {
+      callback?: (result: Object) => void;
+    }) => {
     const service_name = args?.service_name || "patch_trainer_v1";
     // check if the model name has stable-diffusion as an interface
     if (!this.services.find((service) => service.name === service_name)) {
@@ -1093,10 +1092,6 @@ export class SelasClient {
       throw new Error(
         `The service ${service_name} does not have the train-patch-stable-diffusion interface`
       );
-    }
-
-    if (callback == null){
-      callback = function (data) {console.log(data);};
     }
 
     await this.updateAddOnList();
@@ -1123,9 +1118,12 @@ export class SelasClient {
     };
 
     const response = await this.postJob(service_name, trainerConfig);
+
+    var current_callback = args?.callback || function (data) {console.log(data);};
+
     if (response){
       if ("job_id" in response){
-        const result = await this.subscribeToJob(String(response['job_id']),callback);
+        const result = await this.subscribeToJob(String(response['job_id']),current_callback);
         return result;
       }
     }
