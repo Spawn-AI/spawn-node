@@ -1032,13 +1032,6 @@ export class SelasClient {
       );
     }
 
-    await this.updateAddOnList();
-
-    // check if the patch name is in add_ons
-    if (!this.add_ons.find((add_on) => add_on.name === patch_name)) {
-      throw new Error(`The add-on ${patch_name} does not exist`);
-    }
-
     const trainerConfig: PatchTrainerConfig = {
       dataset: dataset,
       patch_name: patch_name,
