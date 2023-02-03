@@ -46,7 +46,7 @@ const generateImage = async () => {
     }
   }
 
-  await client.runPatchTrainer(dataset, "f-crampoute21", { "callback" : my_callback });
+  await client.runPatchTrainer(dataset, "f-crampoute41", { "callback" : my_callback });
 
 
 

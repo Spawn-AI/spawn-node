@@ -43,6 +43,13 @@ To allow a user to access our services, you first need to create an app user. Du
 const selas_id = await selas.createAppUser("Benoit");
 ```
 
+
+To check if a user is already created, you can use the isUser method. It will return a boolean.
+```js
+const isUser = await selas.isUser("Benoit");
+```
+
+
 Once a user is created, you can allow or deny the usage of paid services for this user. This is done by handling the tokens of the user. You can create a token for a user by providing the external id of the user.
 
 
