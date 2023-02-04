@@ -9,13 +9,13 @@ const generateImage = async () => {
     }
   );
 
-  // function fn(response) {
-  //   if ("result" in response) {
-  //     console.log(response.result[0].url);
-  //   }
-  // }
+  function fn(response) {
+    if ("result" in response) {
+      console.log(response.result[0].url);
+    }
+  }
 
-  const job_id = await client.runStableDiffusion("ironman in a banana armor", {batch_size:4});
+  const job_id = await client.runStableDiffusion("ironman in a banana armor", {batch_size:4, callback: fn});
 
   console.log(job_id);
 
