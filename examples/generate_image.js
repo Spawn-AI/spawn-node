@@ -1,8 +1,8 @@
-const selas = require("../dist/index.cjs");
+const spawn = require("../dist/index.cjs");
 require("dotenv").config();
 
 const generateImage = async () => {
-  const client = await selas.createSelasClient({
+  const client = await spawn.createSpawnClient({
     app_id: process.env.TEST_APP_ID,
     key: process.env.TEST_APP_KEY,
     secret: process.env.TEST_APP_SECRET,

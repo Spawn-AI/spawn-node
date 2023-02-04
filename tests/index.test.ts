@@ -1,19 +1,19 @@
 import {
-  createSelasClient,
-  SelasClient
+  createSpawnClient,
+  SpawnClient
 } from "../src/index";
 
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
-describe("testing selas-node", () => {
-  let selas: SelasClient;
+describe("testing spawn-node", () => {
+  let spawn: SpawnClient;
   let user = "Skippy Jack";
   let job: string;
 
   test("creation of client", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
@@ -24,14 +24,14 @@ describe("testing selas-node", () => {
       }
     );
 
-    expect(selas).toBeDefined();
+    expect(spawn).toBeDefined();
 
-    const data = await selas.echo("Hello");
+    const data = await spawn.echo("Hello");
     expect(data).toEqual("Hello");
   });
 
   test("creation of users", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
@@ -39,54 +39,54 @@ describe("testing selas-node", () => {
       }
     );
 
-    const data = await selas.createAppUser("Pierre Binouze");
+    const data = await spawn.createAppUser("Pierre Binouze");
     expect(data).toBeDefined();
 
-    let credit = await selas.setCredit(user,100);
+    let credit = await spawn.setCredit(user,100);
     expect(credit).toEqual(100);
   });
 
   test("token's life cycle", async () => {
-    const new_token = await selas.createToken(user);
+    const new_token = await spawn.createToken(user);
 
     expect(new_token).toBeDefined();
 
-    const token = await selas.getAppUserToken(user);
+    const token = await spawn.getAppUserToken(user);
 
     expect(token).toEqual(new_token);
 
-    const deleted = await selas.deleteAllTokenOfAppUser(user);
+    const deleted = await spawn.deleteAllTokenOfAppUser(user);
 
     expect(deleted).toEqual(true);
   });
 
   test("get service list", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.getServiceList();
+    const data = await spawn.getServiceList();
     expect(data).toBeDefined();
   });
 
   test("get add on list", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = selas.getAddOnList();
+    const data = spawn.getAddOnList();
     console.log(data);
     expect(data).toBeDefined();
   });
 
   test("creation of job", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
@@ -95,38 +95,38 @@ describe("testing selas-node", () => {
       }
     );
 
-    const data = await selas.runStableDiffusion("banana in a kitchen")
+    const data = await spawn.runStableDiffusion("banana in a kitchen")
 
     job = String(data);
     expect(job).toBeDefined();
   });
 
   test("Get a app user's job history", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.getAppUserJobHistory("hello",10, 0);
+    const data = await spawn.getAppUserJobHistory("hello",10, 0);
     expect(data).toBeDefined();
   });
 
   test("get the number of worker for this filter", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.getCountActiveWorker();
+    const data = await spawn.getCountActiveWorker();
     expect(data).toBeDefined();
   });
 
   test("Test the post of patch", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
@@ -153,79 +153,79 @@ describe("testing selas-node", () => {
           "fcompo style, a drawing of a woman holding a baseball bat, inspired by Kusumi Morikage, pixiv, shin hanga, fully clothed. painting of sexy, あかさたなは on twitter, pin on anime, initial d",
       },
     ];
-    const data = await selas.runPatchTrainer(dataset, "f-crampoute10");
+    const data = await spawn.runPatchTrainer(dataset, "f-crampoute10");
     expect(data).toBeDefined();
   });
 
   test("getResult", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.getResult("c97ac10a-f647-4ab7-a531-9a8708df1c8d");
+    const data = await spawn.getResult("c97ac10a-f647-4ab7-a531-9a8708df1c8d");
     expect(data).toBeDefined();
   });
 
   test("Share an add on", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.shareAddOn("f-deca","Jacques");
+    const data = await spawn.shareAddOn("f-deca","Jacques");
     expect(data).toBeDefined();
   });
 
   test("Delete an add on", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.deleteAddOn("f-crampoute");
+    const data = await spawn.deleteAddOn("f-crampoute");
     expect(data).toBeDefined();
   });
 
   test("Rename an add on", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.renameAddOn("f-crampoute2","f-beepboop");
+    const data = await spawn.renameAddOn("f-crampoute2","f-beepboop");
     expect(data).toBeDefined();
   });
 
   test("Publish an add on", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.publishAddOn("f-crampoute8");
+    const data = await spawn.publishAddOn("f-crampoute8");
     expect(data).toBeDefined();
   });
 
   test("Unpublish an add on", async () => {
-    selas = await createSelasClient(
+    spawn = await createSpawnClient(
       {
         app_id: process.env.TEST_APP_ID!,
         key: process.env.TEST_APP_KEY!,
         secret: process.env.TEST_APP_SECRET!,
       }
     );
-    const data = await selas.unpublishAddOn("f-crampoute8");
+    const data = await spawn.unpublishAddOn("f-crampoute8");
     expect(data).toBeDefined();
   });
 

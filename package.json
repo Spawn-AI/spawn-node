@@ -1,7 +1,7 @@
 {
-  "name": "@selas/selas-node",
+  "name": "@spawn/spawn-node",
   "version": "0.2.3",
-  "description": "Client for the Selas API using NodeJS",
+  "description": "Client for the Spawn API using NodeJS",
   "packageManager": "pnpm@7.13.2",
   "engines": {
     "node": ">=16"
@@ -79,18 +79,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SelasStudio/selas-js.git"
+    "url": "git+https://github.com/SpawnStudio/spawn-js.git"
   },
   "keywords": [
     "API",
     "Client",
     "for",
-    "Selas",
+    "Spawn",
     "API",
-    "(https://selas.ai)"
+    "(https://spawn.ai)"
   ],
   "bugs": {
-    "url": "https://github.com/SelasStudio/selas-js/issues"
+    "url": "https://github.com/SpawnStudio/spawn-js/issues"
   },
-  "homepage": "https://github.com/SelasStudio/selas-js#readme"
+  "homepage": "https://github.com/SpawnStudio/spawn-js#readme"
 }

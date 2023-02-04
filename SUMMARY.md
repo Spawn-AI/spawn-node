@@ -1,3 +1,3 @@
 # Table of contents
 
-* [Selas Node](README.md)
+* [Spawn Node](README.md)

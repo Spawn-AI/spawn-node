@@ -122,7 +122,7 @@ export type PatchTrainerConfig = {
 };
 
 /**
- * SelasClient is a client for the Selas API.
+ * SpawnClient is a client for the Spawn API.
  *
  * @param supabase - Supabase client
  * @param app_id - The application ID.
@@ -130,7 +130,7 @@ export type PatchTrainerConfig = {
  * @param secret - The application secret.
  * @param worker_filter - Filter with regex to select workers.
  */
-export class SelasClient {
+export class SpawnClient {
   supabase: SupabaseClient;
   app_id: string;
   key: string;
@@ -143,14 +143,14 @@ export class SelasClient {
   app_user_token: string;
 
   /**
-   * constructor creates a new SelasClient.
+   * constructor creates a new SpawnClient.
    * @param supabase
    * @param app_id
    * @param key
    * @param secret
    * @param worker_filter
    * @example
-   *  client = await createSelasClient(
+   *  client = await createSpawnClient(
    *  {
    *    app_id: process.env.TEST_APP_ID!,
    *    key: process.env.TEST_APP_KEY!,
@@ -180,11 +180,11 @@ export class SelasClient {
   }
 
   /**
-   * handle_error is a function to handle the errors returned by the Selas API.
+   * handle_error is a function to handle the errors returned by the Spawn API.
    * @param error - The error to handle.
    * @example
    * try {
-   *   await selas.owner_rpc("test", {});
+   *   await spawn.owner_rpc("test", {});
    * } catch (error) {
    *  this.handle_error(error);
    * }
@@ -217,7 +217,7 @@ export class SelasClient {
   };
 
   /**
-   * owner_rpc is a wrapper around the supabase owner_rpc function usable by the SelasClient.
+   * owner_rpc is a wrapper around the supabase owner_rpc function usable by the SpawnClient.
    * @param fn - The name of the function to call.
    * @param params - The parameters to pass to the function.
    * @returns the result of the owner_rpc call.
@@ -237,7 +237,7 @@ export class SelasClient {
   };
 
   /**
-   * rpc is a wrapper around the supabase rpc function usable by the SelasClient.
+   * rpc is a wrapper around the supabase rpc function usable by the SpawnClient.
    * @param fn - The name of the function to call.
    * @param params - The parameters to pass to the function.
    * @returns the result of the rpc call.
@@ -278,7 +278,7 @@ export class SelasClient {
    * test_connection is a function to test the connection to the database.
    * @returns nothing
    * @example
-   * await selas.test_connection();
+   * await spawn.test_connection();
    * @throws a typescript error
    */
   test_connection = async () => {
@@ -301,7 +301,7 @@ export class SelasClient {
    * getServiceList is a function to get the list of services available to this app.
    * @returns the list of services.
    * @example
-   * const services = await selas.getServiceList();
+   * const services = await spawn.getServiceList();
    */
   getServiceList = async () => {
     var response;
@@ -323,7 +323,7 @@ export class SelasClient {
    * updateAddOnList is a function to update the list of add-ons available to this app.
    * @returns nothing.
    * @example
-   * const add_ons = await selas.updateAddOnList();
+   * const add_ons = await spawn.updateAddOnList();
    */
   updateAddOnList = async () => {
     var response;
@@ -344,14 +344,14 @@ export class SelasClient {
    * getAddOnList is a function to get the list of add-ons available to this app.
    * @returns the list of add-ons.
    * @example
-   * const add_ons = selas.getAddOnList();
+   * const add_ons = spawn.getAddOnList();
    */
   getAddOnList = async () => {
       return this.add_ons
   };
 
   /**
-   * Send a message to the selas server and wait for the same message to be received.
+   * Send a message to the spawn server and wait for the same message to be received.
    * @param message - The message to send.
    * @returns a text message which is the same as the input message.
    */
@@ -719,7 +719,7 @@ export class SelasClient {
    * @param job_id - the id of the job.
    * @returns a json object containing the result of the job.
    * @example
-   * const { data, error } = await selas.getResult({job_id: response.data});
+   * const { data, error } = await spawn.getResult({job_id: response.data});
    */
   getResult = async (job_id: string) => {
     const { data, error } = await this.owner_rpc("app_owner_get_result", {
@@ -762,7 +762,7 @@ export class SelasClient {
   };
 
   /**
-   * Get the cost a StableDiffusion job on Selas API.
+   * Get the cost a StableDiffusion job on Spawn API.
    *
    * @param prompt - the description of the image to be generated
    * @param args.negative_prompt - description of the image to be generated, but with negative words like "ugly", "blurry" or "low quality"
@@ -873,7 +873,7 @@ export class SelasClient {
   };
 
   /**
-   * Run a StableDiffusion job on Selas API. The job will be run on the first available worker.
+   * Run a StableDiffusion job on Spawn API. The job will be run on the first available worker.
    *
    * @param prompt - the description of the image to be generated
    * @param args.negative_prompt - description of the image to be generated, but with negative words like "ugly", "blurry" or "low quality"
@@ -1132,7 +1132,7 @@ export class SelasClient {
    * getCountActiveWorker returns the number of active workers, depending on the worker_filter used.
    * @returns the number of active workers.
    * @example
-   * const count = await selas.getCountActiveWorker();
+   * const count = await spawn.getCountActiveWorker();
    * console.log(count);
    */
   getCountActiveWorker = async () => {
@@ -1147,13 +1147,13 @@ export class SelasClient {
 }
 
 /**
- * Create a selas client. The client can be used to access the API using the credentials created
- * on https://selas.ai. The client can be used to manage users, tokens and credits of an app. Be careful, the client
+ * Create a spawn client. The client can be used to access the API using the credentials created
+ * on https://spawn.ai. The client can be used to manage users, tokens and credits of an app. Be careful, the client
  * is not secure and should not be used in a browser.
  *
- * @param credentials - the credentials of the app. You can create them on https://selas.ai
+ * @param credentials - the credentials of the app. You can create them on https://spawn.ai
  *
- * @returns a SelasClient object.
+ * @returns a SpawnClient object.
  *
  * @example
  * Create a app owner client.
@@ -1162,7 +1162,7 @@ export class SelasClient {
  * ```
  *
  */
-export const createSelasClient = async (
+export const createSpawnClient = async (
   credentials: { app_id: string; key: string; secret: string, app_user_external_id?: string},
   worker_filter?: WorkerFilter
 ) => {
@@ -1175,7 +1175,7 @@ export const createSelasClient = async (
   });
 
 
-  const selas = new SelasClient(
+  const spawn = new SpawnClient(
     supabase,
     credentials.app_id,
     credentials.key,
@@ -1183,13 +1183,13 @@ export const createSelasClient = async (
     worker_filter
   );
 
-  await selas.test_connection();
+  await spawn.test_connection();
 
   if (credentials.app_user_external_id)
-    await selas.setUserID(credentials.app_user_external_id);
+    await spawn.setUserID(credentials.app_user_external_id);
 
-  await selas.getServiceList();
-  await selas.updateAddOnList();
+  await spawn.getServiceList();
+  await spawn.updateAddOnList();
 
-  return selas;
+  return spawn;
 };
