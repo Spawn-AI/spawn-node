@@ -972,8 +972,7 @@ export class SelasClient {
     const response = await this.postJob(service_name, config);
     if (response){
       if ("job_id" in response){
-        const result = await this.subscribeToJob(String(response['job_id']), current_callback );
-        return result;
+        await this.subscribeToJob(String(response['job_id']), current_callback );
       }
     }
     return response;
@@ -1123,8 +1122,7 @@ export class SelasClient {
 
     if (response){
       if ("job_id" in response){
-        const result = await this.subscribeToJob(String(response['job_id']),current_callback);
-        return result;
+        await this.subscribeToJob(String(response['job_id']),current_callback);
       }
     }
     return response;
