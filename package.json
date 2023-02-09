@@ -1,6 +1,6 @@
 {
   "name": "@spawn-ai/spawn-node",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Client for the Spawn API using NodeJS",
   "packageManager": "pnpm@7.13.2",
   "engines": {
