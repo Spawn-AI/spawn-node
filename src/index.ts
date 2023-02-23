@@ -1,7 +1,4 @@
-//TODO documentation site web
-
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-
 // @ts-ignore
 import Pusher from "pusher-client";
 
@@ -114,6 +111,10 @@ export type StableDiffusionConfig = {
  */
 export type PatchTrainerConfig = {
   dataset: any[];
+
+  trigger_prompt: string;
+  use_synthetic_data: boolean;
+
   patch_name: string;
   description: string;
   learning_rate: number;
@@ -297,13 +298,15 @@ export class SpawnClient {
     }
   };
 
+
+
   /**
-   * getServiceList is a function to get the list of services available to this app.
+   * updateServiceList is a function to get the list of services available to this app.
    * @returns the list of services.
    * @example
-   * const services = await spawn.getServiceList();
+   * await spawn.updateServiceList();
    */
-  getServiceList = async () => {
+  updateServiceList = async () => {
     var response;
     if (this.app_user_id == "")
       response = await this.owner_rpc("app_owner_get_services", {});
@@ -316,7 +319,10 @@ export class SpawnClient {
     if (data) {
       this.services = data;
     }
-    return data;
+  };
+
+  getServiceList = async () => {
+    return this.services;
   };
 
   /**
@@ -1010,6 +1016,8 @@ export class SpawnClient {
     dataset: TrainingImage[],
     patch_name: string,
     args?: {
+      trigger_prompt?: string,
+      use_synthetic_data?: boolean;
       service_name?: string;
       description?: string;
       learning_rate?: number;
@@ -1033,6 +1041,8 @@ export class SpawnClient {
 
     const trainerConfig: PatchTrainerConfig = {
       dataset: dataset,
+      trigger_prompt: args?.trigger_prompt || "",
+      use_synthetic_data: args?.use_synthetic_data || true,
       patch_name: patch_name,
       description: args?.description || "",
       learning_rate: args?.learning_rate || 1e-4,
@@ -1072,6 +1082,10 @@ export class SpawnClient {
     dataset: TrainingImage[],
     patch_name: string,
     args?: {
+      // For the dataset
+      trigger_prompt: string;
+      use_synthetic_data: boolean;
+
       service_name?: string;
       description?: string;
       learning_rate?: number;
@@ -1109,6 +1123,8 @@ export class SpawnClient {
 
     const trainerConfig: PatchTrainerConfig = {
       dataset: dataset,
+      trigger_prompt: args?.trigger_prompt || "",
+      use_synthetic_data: args?.use_synthetic_data || true,
       patch_name: patch_name,
       description: args?.description || "",
       learning_rate: args?.learning_rate || 1e-4,
@@ -1188,7 +1204,7 @@ export const createSpawnClient = async (
   if (credentials.app_user_external_id)
     await spawn.setUserID(credentials.app_user_external_id);
 
-  await spawn.getServiceList();
+  await spawn.updateServiceList();
   await spawn.updateAddOnList();
 
   return spawn;
