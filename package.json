@@ -1,6 +1,6 @@
 {
-  "name": "@spawn/spawn-node",
-  "version": "0.2.4",
+  "name": "@spawn-ai/spawn-node",
+  "version": "0.2.6",
   "description": "Client for the Spawn API using NodeJS",
   "packageManager": "pnpm@7.13.2",
   "engines": {
@@ -79,7 +79,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SpawnStudio/spawn-js.git"
+    "url": "git+https://github.com/Spawn-AI/spawn-node.git"
   },
   "keywords": [
     "API",
@@ -90,7 +90,7 @@
     "(https://spawn.ai)"
   ],
   "bugs": {
-    "url": "https://github.com/SpawnStudio/spawn-js/issues"
+    "url": "https://github.com/Spawn-AI/spawn-node/issues"
   },
-  "homepage": "https://github.com/SpawnStudio/spawn-js#readme"
+  "homepage": "https://github.com/Spawn-AI/spawn-node/#readme"
 }
